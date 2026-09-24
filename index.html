@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f2937">
+<title>Comandera</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1 id="club-title">Comandera</h1>
+  <button id="btn-printer" class="printer off" title="Impresora">🖨️ <span id="printer-status">Sin impresora</span></button>
+</header>
+
+<main>
+  <!-- VENDER -->
+  <section id="view-vender" class="view active">
+    <div id="truck-filter" class="chips"></div>
+    <div id="products" class="grid"></div>
+    <div id="cart-bar">
+      <button id="btn-cart" class="big">🛒 <span id="cart-count">0</span> · $<span id="cart-total">0</span></button>
+    </div>
+  </section>
+
+  <!-- CARRITO / COBRAR -->
+  <div id="cart-sheet" class="sheet hidden">
+    <div class="sheet-body">
+      <div class="sheet-head"><h2>Pedido</h2><button class="close" data-close="cart-sheet">✕</button></div>
+      <div id="cart-items"></div>
+      <div class="total-line">Total <b>$<span id="cart-total2">0</span></b></div>
+      <div class="pay">
+        <label><input type="radio" name="pay" value="efectivo" checked> 💵 Efectivo</label>
+        <label><input type="radio" name="pay" value="transferencia"> 📱 Transferencia/QR</label>
+      </div>
+      <div class="row">
+        <button id="btn-clear" class="secondary">Vaciar</button>
+        <button id="btn-cobrar" class="big ok">Cobrar e imprimir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIA -->
+  <section id="view-dia" class="view">
+    <div id="day-summary"></div>
+    <div class="row">
+      <button id="btn-print-cierre">🖨️ Imprimir cierre</button>
+      <button id="btn-csv" class="secondary">⬇️ Excel (CSV)</button>
+    </div>
+    <h3>Pedidos</h3>
+    <div id="order-list"></div>
+    <button id="btn-close-day" class="danger big">Cerrar el día y empezar de cero</button>
+    <h3>Días anteriores</h3>
+    <div id="history"></div>
+  </section>
+
+  <!-- CONFIG -->
+  <section id="view-config" class="view">
+    <h3>Evento</h3>
+    <label class="field">Nombre (sale en los tickets)<input id="cfg-club" type="text"></label>
+
+    <h3>Impresora</h3>
+    <label class="field">Cómo imprimir
+      <select id="cfg-mode">
+        <option value="ble">Bluetooth directo (Chrome en Android)</option>
+        <option value="rawbt">App RawBT (Android, Bluetooth clásico o WiFi)</option>
+        <option value="system">Diálogo de impresión del sistema</option>
+        <option value="none">No imprimir</option>
+      </select>
+    </label>
+    <label class="field">Ancho del papel
+      <select id="cfg-width">
+        <option value="32">58 mm</option>
+        <option value="48">80 mm</option>
+      </select>
+    </label>
+    <label class="check"><input id="cfg-customer" type="checkbox"> Imprimir también ticket para el cliente</label>
+    <label class="check"><input id="cfg-cut" type="checkbox"> La impresora tiene cortador automático</label>
+    <button id="btn-test">Imprimir prueba</button>
+
+    <h3>Food trucks y productos</h3>
+    <p class="hint">"Precio" es lo que paga el cliente. "Al truck" es lo que le pagás al food truck por cada unidad. La diferencia es tu ganancia.</p>
+    <div id="cfg-trucks"></div>
+
+    <h3>Respaldo</h3>
+    <div class="row">
+      <button id="btn-export" class="secondary">Exportar datos</button>
+      <label class="button secondary">Importar datos<input id="file-import" type="file" accept="application/json" hidden></label>
+    </div>
+  </section>
+</main>
+
+<nav>
+  <button data-view="vender" class="active">🍔<span>Vender</span></button>
+  <button data-view="dia">📋<span>Día</span></button>
+  <button data-view="config">⚙️<span>Config</span></button>
+</nav>
+
+<div id="toast" class="hidden"></div>
+<div id="print-area"></div>
+
+<script src="printer.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
