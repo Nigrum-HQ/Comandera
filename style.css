@@ -99,3 +99,42 @@ nav button.active { color: var(--fg); font-weight: 700; }
   .ticket .big { font-size: 20px; font-weight: bold; }
   .ticket div { white-space: pre; }
 }
+
+/* ---------- roles, ingreso y pantallas en vivo ---------- */
+header .title { flex: 1; min-width: 0; }
+header .title small { color: #9ca3af; font-size: .8rem; }
+.logout { background: #374151; padding: 8px 12px; font-size: .85rem; }
+button.wide { width: 100%; margin: 8px 0; }
+button:disabled { opacity: .6; }
+
+.login { max-width: 360px; margin: 0 auto; padding: 24px 16px; text-align: center; }
+.login h2 { margin: 8px 0; }
+.pin-dots { height: 40px; display: flex; justify-content: center; align-items: center; gap: 12px; margin: 16px 0; }
+.pin-dots .dot { width: 16px; height: 16px; border-radius: 50%; background: var(--dark); }
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.keypad button { font-size: 1.6rem; padding: 18px 0; background: #fff; color: var(--fg); box-shadow: 0 1px 2px #0002; }
+.keypad button.ok { background: var(--ok); color: #fff; font-size: 1.1rem; }
+.keypad button.secondary { background: #e5e7eb; }
+
+.live { color: var(--ok); }
+.cards .card.wide { grid-column: 1 / -1; }
+.card.wide b { font-size: 2rem; }
+
+.truck-row { background: #fff; border-left: 8px solid var(--c); border-radius: 10px; padding: 10px 12px; margin: 8px 0; }
+.truck-row-head { display: flex; justify-content: space-between; }
+.truck-row-head span { color: var(--muted); }
+.bar { height: 8px; background: #f3f4f6; border-radius: 4px; margin: 8px 0; overflow: hidden; }
+.bar span { display: block; height: 100%; background: var(--c); }
+.truck-row-nums { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; font-size: .9rem; }
+
+.truck-cfg-head { display: flex; gap: 8px; align-items: center; }
+.truck-cfg-head .t-color { width: 44px; height: 44px; padding: 2px; flex: 0 0 auto; }
+.truck-cfg-head .t-name { flex: 1; }
+.field.inline { display: flex; align-items: center; gap: 8px; }
+.field.inline input { width: 120px; margin: 0; }
+.margin { font-size: .8rem; color: var(--muted); margin: -2px 0 8px; }
+.margin .neg { color: var(--danger); }
+
+.order.kitchen { border-left: 6px solid var(--dark); }
+.kitchen-head { display: flex; justify-content: space-between; font-size: 1.1rem; margin-bottom: 4px; }
+.kitchen-item { font-size: 1.2rem; font-weight: 600; }
