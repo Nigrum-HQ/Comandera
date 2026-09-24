@@ -37,9 +37,9 @@ const Printer = (() => {
           // sin cortador: una marca bien visible para arrancar cada papelito por separado
           const mark = ' CORTAR AQUI ';
           const side = '-'.repeat(Math.max(0, Math.floor((width - mark.length) / 2)));
-          out.push(0x1b, 0x61, 0, 0x1b, 0x45, 1, 0x1d, 0x21, 0);
+          out.push(0x0a, 0x0a, 0x1b, 0x61, 0, 0x1b, 0x45, 1, 0x1d, 0x21, 0x01); // doble alto
           push(side + mark + side);
-          out.push(0x0a, 0x1b, 0x45, 0, 0x0a, 0x0a, 0x0a);
+          out.push(0x0a, 0x1b, 0x45, 0, 0x1d, 0x21, 0, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a);
         }
         out.push(0x1b, 0x40);
         continue;
