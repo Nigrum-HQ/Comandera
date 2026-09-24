@@ -11,13 +11,30 @@
 </head>
 <body>
 <header>
-  <h1 id="club-title">Comandera</h1>
-  <button id="btn-printer" class="printer off" title="Impresora">🖨️ <span id="printer-status">Sin impresora</span></button>
+  <div class="title">
+    <h1 id="event-title">Comandera</h1>
+    <small id="role-label"></small>
+  </div>
+  <button id="btn-printer" class="printer off hidden">🖨️ <span id="printer-status">Conectar</span></button>
+  <button id="btn-logout" class="logout hidden">Salir</button>
 </header>
 
-<main>
-  <!-- VENDER -->
-  <section id="view-vender" class="view active">
+<!-- INGRESO CON PIN -->
+<section id="login" class="login">
+  <h2 id="login-title">Ingresá tu PIN</h2>
+  <p id="login-hint" class="hint"></p>
+  <div id="pin-dots" class="pin-dots"></div>
+  <div class="keypad">
+    <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+    <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+    <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+    <button data-k="del" class="secondary">⌫</button><button data-k="0">0</button><button data-k="ok" class="ok">Entrar</button>
+  </div>
+</section>
+
+<main id="app" class="hidden">
+  <!-- VENDER (caja y admin) -->
+  <section id="view-vender" class="view">
     <div id="truck-filter" class="chips"></div>
     <div id="products" class="grid"></div>
     <div id="cart-bar">
@@ -25,43 +42,56 @@
     </div>
   </section>
 
-  <!-- CARRITO / COBRAR -->
-  <div id="cart-sheet" class="sheet hidden">
-    <div class="sheet-body">
-      <div class="sheet-head"><h2>Pedido</h2><button class="close" data-close="cart-sheet">✕</button></div>
-      <div id="cart-items"></div>
-      <div class="total-line">Total <b>$<span id="cart-total2">0</span></b></div>
-      <div class="pay">
-        <label><input type="radio" name="pay" value="efectivo" checked> 💵 Efectivo</label>
-        <label><input type="radio" name="pay" value="transferencia"> 📱 Transferencia/QR</label>
-      </div>
-      <div class="row">
-        <button id="btn-clear" class="secondary">Vaciar</button>
-        <button id="btn-cobrar" class="big ok">Cobrar e imprimir</button>
-      </div>
-    </div>
-  </div>
+  <!-- PEDIDOS DEL DÍA (caja y admin) -->
+  <section id="view-pedidos" class="view">
+    <div id="caja-summary"></div>
+    <h3>Pedidos de hoy</h3>
+    <div id="order-list"></div>
+  </section>
 
-  <!-- DIA -->
-  <section id="view-dia" class="view">
-    <div id="day-summary"></div>
+  <!-- EN VIVO (admin) -->
+  <section id="view-vivo" class="view">
+    <p class="hint live">● En vivo · <span id="vivo-since"></span></p>
+    <div id="vivo-summary"></div>
     <div class="row">
       <button id="btn-print-cierre">🖨️ Imprimir cierre</button>
-      <button id="btn-csv" class="secondary">⬇️ Excel (CSV)</button>
+      <button id="btn-print-liq" class="secondary">🖨️ Liquidación por truck</button>
     </div>
-    <h3>Pedidos</h3>
-    <div id="order-list"></div>
-    <button id="btn-close-day" class="danger big">Cerrar el día y empezar de cero</button>
+    <button id="btn-csv" class="secondary wide">⬇️ Bajar Excel (CSV) del día</button>
+    <button id="btn-close-day" class="danger big">Cerrar el día</button>
     <h3>Días anteriores</h3>
     <div id="history"></div>
   </section>
 
-  <!-- CONFIG -->
-  <section id="view-config" class="view">
-    <h3>Evento</h3>
-    <label class="field">Nombre (sale en los tickets)<input id="cfg-club" type="text"></label>
+  <!-- PRODUCTOS (admin) -->
+  <section id="view-productos" class="view">
+    <p class="hint">"Precio" es lo que paga el cliente. "Al truck" es lo que le pagás al food truck por unidad. La diferencia es tu ganancia. Los cambios se guardan solos y le llegan a la caja al instante.</p>
+    <div id="cfg-trucks"></div>
+  </section>
 
-    <h3>Impresora</h3>
+  <!-- MI DÍA (food truck) -->
+  <section id="view-truck" class="view">
+    <p class="hint live">● En vivo · <span id="truck-since"></span></p>
+    <div id="truck-summary"></div>
+    <h3>Pedidos</h3>
+    <div id="truck-orders"></div>
+  </section>
+
+  <!-- HISTORIAL (food truck) -->
+  <section id="view-truckhist" class="view">
+    <div id="truck-history"></div>
+  </section>
+
+  <!-- AJUSTES -->
+  <section id="view-ajustes" class="view">
+    <div id="admin-settings" class="hidden">
+      <h3>Evento y PINs</h3>
+      <label class="field">Nombre del evento (sale en los tickets)<input id="cfg-event" type="text"></label>
+      <label class="field">PIN de la caja<input id="cfg-pin-caja" type="text" inputmode="numeric" maxlength="8"></label>
+      <label class="field">Tu PIN de admin<input id="cfg-pin-admin" type="text" inputmode="numeric" maxlength="8"></label>
+      <p class="hint">Los PINs de cada food truck se ponen en 🍔 Productos.</p>
+    </div>
+    <h3>Impresora de este celular</h3>
     <label class="field">Cómo imprimir
       <select id="cfg-mode">
         <option value="ble">Bluetooth directo (Chrome en Android)</option>
@@ -79,28 +109,32 @@
     <label class="check"><input id="cfg-customer" type="checkbox"> Imprimir también ticket para el cliente</label>
     <label class="check"><input id="cfg-cut" type="checkbox"> La impresora tiene cortador automático</label>
     <button id="btn-test">Imprimir prueba</button>
-
-    <h3>Food trucks y productos</h3>
-    <p class="hint">"Precio" es lo que paga el cliente. "Al truck" es lo que le pagás al food truck por cada unidad. La diferencia es tu ganancia.</p>
-    <div id="cfg-trucks"></div>
-
-    <h3>Respaldo</h3>
-    <div class="row">
-      <button id="btn-export" class="secondary">Exportar datos</button>
-      <label class="button secondary">Importar datos<input id="file-import" type="file" accept="application/json" hidden></label>
-    </div>
   </section>
 </main>
 
-<nav>
-  <button data-view="vender" class="active">🍔<span>Vender</span></button>
-  <button data-view="dia">📋<span>Día</span></button>
-  <button data-view="config">⚙️<span>Config</span></button>
-</nav>
+<!-- CARRITO -->
+<div id="cart-sheet" class="sheet hidden">
+  <div class="sheet-body">
+    <div class="sheet-head"><h2>Pedido</h2><button class="close" data-close="cart-sheet">✕</button></div>
+    <div id="cart-items"></div>
+    <div class="total-line">Total <b>$<span id="cart-total2">0</span></b></div>
+    <div class="pay">
+      <label><input type="radio" name="pay" value="efectivo" checked> 💵 Efectivo</label>
+      <label><input type="radio" name="pay" value="transferencia"> 📱 Transferencia/QR</label>
+    </div>
+    <div class="row">
+      <button id="btn-clear" class="secondary">Vaciar</button>
+      <button id="btn-cobrar" class="big ok">Cobrar e imprimir</button>
+    </div>
+  </div>
+</div>
 
+<nav id="nav" class="hidden"></nav>
 <div id="toast" class="hidden"></div>
 <div id="print-area"></div>
 
+<script src="config.js"></script>
+<script src="api.js"></script>
 <script src="printer.js"></script>
 <script src="app.js"></script>
 </body>
