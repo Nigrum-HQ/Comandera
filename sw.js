@@ -1,5 +1,5 @@
 // Cache para que la app funcione sin internet. Subir VERSION al cambiar archivos.
-const VERSION = 'comandera-v2';
+const VERSION = 'comandera-v3';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'api.js', 'config.js', 'printer.js', 'manifest.webmanifest', 'icon.svg'];
 
 self.addEventListener('install', e => {
