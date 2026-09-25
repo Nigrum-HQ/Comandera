@@ -75,7 +75,10 @@ const Printer = (() => {
 
   async function connect() {
     if (!navigator.bluetooth) {
-      throw new Error('Este navegador no soporta Bluetooth. Usá Chrome en Android, o elegí "App RawBT" en Config.');
+      const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      throw new Error(ios
+        ? 'En iPhone, Safari no usa Bluetooth. Instalá la app gratis "Bluefy" desde el App Store y abrí la Comandera desde ahí.'
+        : 'Este navegador no soporta Bluetooth. Usá Chrome en Android, o elegí "App RawBT" en Ajustes.');
     }
     device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: SERVICES });
     device.addEventListener('gattserverdisconnected', () => {
@@ -96,9 +99,12 @@ const Printer = (() => {
     await ensureConnected();
     for (let i = 0; i < bytes.length; i += CHUNK) {
       const part = bytes.slice(i, i + CHUNK);
-      if (characteristic.properties.write) await characteristic.writeValueWithResponse(part);
-      else {
-        await characteristic.writeValueWithoutResponse(part);
+      if (characteristic.properties.write) {
+        // Bluefy (iPhone) puede no tener los métodos nuevos: writeValue es el equivalente viejo
+        if (characteristic.writeValueWithResponse) await characteristic.writeValueWithResponse(part);
+        else await characteristic.writeValue(part);
+      } else {
+        await (characteristic.writeValueWithoutResponse || characteristic.writeValue).call(characteristic, part);
         await new Promise(r => setTimeout(r, 30));
       }
     }

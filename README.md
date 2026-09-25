@@ -35,6 +35,7 @@ Sirve cualquier impresora térmica **ESC/POS** de 58 mm u 80 mm (las típicas "i
 | Modo | Celular | Qué hace falta |
 |---|---|---|
 | **Bluetooth directo** (recomendado) | Android con Chrome | Que la impresora sea **Bluetooth 4.0 / BLE**. Tocás 🖨️ arriba, elegís la impresora, listo. |
+| **Bluetooth directo** | iPhone con el navegador gratis **Bluefy** | Igual que en Android: impresora **BLE** (que diga compatible con iOS/iPhone). Safari no sirve para Bluetooth. |
 | **App RawBT** | Android | Instalar la app gratuita *RawBT* y conectar ahí la impresora. Sirve para impresoras Bluetooth clásicas o **WiFi**. |
 | **Diálogo del sistema** | Cualquiera (iPhone incluido) | Una impresora que el teléfono ya sepa usar. Es más lento. |
 
@@ -42,7 +43,7 @@ Consejos:
 - Al comprar la impresora, buscá que diga **BLE** o **Bluetooth 4.0** y **ESC/POS** (ej.: modelos genéricos de 58 mm tipo "MTP-II", "PT-210", Xprinter con BLE).
 - Si se reinicia la app, hay que tocar 🖨️ de nuevo para reconectar (lo exige Chrome por seguridad).
 - Usá **Imprimir prueba** en Config antes de arrancar.
-- iPhone no permite Bluetooth desde el navegador; para la caja conviene un Android.
+- En iPhone, abrir la Comandera desde **Bluefy** (App Store), no desde Safari.
 
 ## Instalación (una sola vez)
 
