@@ -277,6 +277,8 @@ function truckTicket(order, truckId) {
     { sep: true },
     ...items.map(i => ({ text: `${i.qty} x ${i.name}`, big: true })),
     { sep: true },
+    { text: 'ENTREGAR ESTE TICKET', bold: true, center: true },
+    { text: `AL FOOD TRUCK ${items[0].truck_name.toUpperCase()}`, bold: true, center: true },
     { cut: true },
   ];
 }
