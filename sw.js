@@ -1,5 +1,5 @@
 // Cache para que la app funcione sin internet. Subir VERSION al cambiar archivos.
-const VERSION = 'comandera-v8';
+const VERSION = 'comandera-v9';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'api.js', 'config.js', 'printer.js', 'manifest.webmanifest', 'icon.svg'];
 
 self.addEventListener('install', e => {
@@ -12,15 +12,21 @@ self.addEventListener('activate', e => {
     .then(() => self.clients.claim()));
 });
 
-// Sirve desde cache y actualiza en segundo plano.
+// Primero busca la versión nueva en internet (así los arreglos llegan enseguida a las cajas);
+// si no hay señal o tarda más de 4 segundos, usa la copia guardada.
 self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
+  const url = new URL(e.request.url);
+  if (e.request.method !== 'GET' || url.origin !== location.origin) return;
   e.respondWith(caches.open(VERSION).then(async cache => {
-    const cached = await cache.match(e.request);
-    const fresh = fetch(e.request).then(r => {
+    const fresh = fetch(e.request, { cache: 'no-cache' }).then(r => {
       if (r.ok) cache.put(e.request, r.clone());
       return r;
-    }).catch(() => cached);
-    return cached || fresh;
+    });
+    const timeout = new Promise((_, reject) => setTimeout(reject, 4000));
+    try {
+      return await Promise.race([fresh, timeout]);
+    } catch {
+      return (await cache.match(e.request)) || fresh;
+    }
   }));
 });
