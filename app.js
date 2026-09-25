@@ -265,6 +265,12 @@ function pad(left, right, width) {
   return left + ' '.repeat(w - left.length - right.length) + right;
 }
 
+// Si el nombre no entra junto al precio, el precio baja al renglón siguiente en vez de cortar el nombre.
+function priceLine(left, right, width) {
+  if (left.length + right.length + 1 <= width) return [{ text: pad(left, right, width) }];
+  return [{ text: left }, { text: pad('', right, width) }];
+}
+
 const groupByTruck = items => [...new Set(items.map(i => i.truck_id))];
 
 function truckTicket(order, truckId) {
@@ -294,13 +300,14 @@ function customerTicket(order) {
       const items = order.items.filter(i => i.truck_id === tid);
       return [
         { text: items[0].truck_name.toUpperCase(), bold: true },
-        ...items.map(i => ({ text: pad(`${i.qty} x ${i.name}`, '$' + money(i.qty * i.price), w) })),
+        ...items.flatMap(i => priceLine(`${i.qty} x ${i.name}`, '$' + money(i.qty * i.price), w)),
       ];
     }),
     { sep: true },
     { text: pad('TOTAL', '$' + money(order.total), w / 2), big: true },
     { text: order.pay === 'efectivo' ? 'Pago: efectivo' : 'Pago: transferencia/QR' },
-    { text: 'Retira en cada food truck con este numero', center: true },
+    { text: 'Retira en cada food truck', center: true },
+    { text: 'con los tickets de abajo', center: true },
     { text: 'No valido como factura', center: true },
     { cut: true },
   ];

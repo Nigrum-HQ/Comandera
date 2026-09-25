@@ -26,6 +26,25 @@ const Printer = (() => {
       .replace(/[¡¿]/g, '').replace(/[^\x20-\x7e]/g, '?');
   }
 
+  // Corta entre palabras las líneas que no entran; las que entran quedan intactas (con su relleno).
+  function wrap(text, cols) {
+    if (text.length <= cols) return [text];
+    const rows = [];
+    let row = '';
+    for (let word of text.split(' ')) {
+      while (word.length > cols) { // palabra más larga que el renglón
+        if (row) { rows.push(row); row = ''; }
+        rows.push(word.slice(0, cols));
+        word = word.slice(cols);
+      }
+      if (!row) row = word;
+      else if (row.length + 1 + word.length <= cols) row += ' ' + word;
+      else { rows.push(row); row = word; }
+    }
+    if (row) rows.push(row);
+    return rows;
+  }
+
   function toEscPos(lines, width, hasCutter) {
     const out = [0x1b, 0x40]; // inicializar
     const push = s => { for (const ch of clean(s)) out.push(ch.charCodeAt(0)); };
@@ -44,12 +63,19 @@ const Printer = (() => {
         out.push(0x1b, 0x40);
         continue;
       }
-      if (l.sep) { push('-'.repeat(width)); out.push(0x0a); continue; }
+      if (l.sep) {
+        out.push(0x1b, 0x61, 0, 0x1b, 0x45, 0, 0x1d, 0x21, 0); // tamaño normal, si no los guiones no entran
+        push('-'.repeat(width));
+        out.push(0x0a);
+        continue;
+      }
       out.push(0x1b, 0x61, l.center ? 1 : 0);
       out.push(0x1b, 0x45, l.bold || l.big ? 1 : 0);
       out.push(0x1d, 0x21, l.big ? 0x11 : 0x00);
-      push(l.text || '');
-      out.push(0x0a);
+      for (const row of wrap(clean(l.text || ''), l.big ? Math.floor(width / 2) : width)) {
+        push(row);
+        out.push(0x0a);
+      }
     }
     out.push(0x1b, 0x61, 0, 0x1b, 0x45, 0, 0x1d, 0x21, 0);
     return new Uint8Array(out);
