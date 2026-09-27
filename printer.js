@@ -16,6 +16,7 @@ const Printer = (() => {
 
   let device = null;
   let characteristic = null;
+  let usb = null; // { dev, endpoint } de la impresora por cable
   let onStatus = () => {};
 
   function setStatus(s) { onStatus(s); }
@@ -166,16 +167,70 @@ const Printer = (() => {
     window.print();
   }
 
+  // ---------- USB (cable) ----------
+  // Busca la interfaz con salida "bulk" (la que usan las impresoras para recibir datos).
+  async function openUsb(dev) {
+    await dev.open();
+    if (!dev.configuration) await dev.selectConfiguration(1);
+    for (const iface of dev.configuration.interfaces) {
+      for (const alt of iface.alternates) {
+        const out = alt.endpoints.find(e => e.direction === 'out' && e.type === 'bulk');
+        if (out) {
+          await dev.claimInterface(iface.interfaceNumber);
+          usb = { dev, endpoint: out.endpointNumber };
+          setStatus('ok');
+          return dev.productName || 'Impresora USB';
+        }
+      }
+    }
+    throw new Error('Ese dispositivo USB no parece una impresora');
+  }
+
+  async function connectUsb() {
+    if (!navigator.usb) {
+      throw new Error('Este navegador no permite USB. Usá Chrome en Android (con cable OTG) o en la computadora. En iPhone no se puede por cable.');
+    }
+    setStatus('conectando');
+    try {
+      return await openUsb(await navigator.usb.requestDevice({ filters: [] }));
+    } catch (e) {
+      setStatus('desconectada');
+      if (e.name === 'SecurityError' || /claim|access/i.test(e.message)) {
+        throw new Error('La compu no deja usar la impresora: en Windows hay que cambiarle el driver a WinUSB (ver el manual), o usar el modo "Diálogo de impresión".');
+      }
+      throw e;
+    }
+  }
+
+  async function writeUsb(bytes) {
+    if (!usb || !usb.dev.opened) {
+      // una impresora ya autorizada se reconecta sola, sin volver a elegirla
+      const [dev] = navigator.usb ? await navigator.usb.getDevices() : [];
+      if (!dev) throw new Error('No hay impresora USB conectada. Tocá el botón 🖨️ arriba.');
+      await openUsb(dev);
+    }
+    for (let i = 0; i < bytes.length; i += 4096) {
+      await usb.dev.transferOut(usb.endpoint, bytes.slice(i, i + 4096));
+    }
+  }
+
+  if (navigator.usb) {
+    navigator.usb.addEventListener('disconnect', e => {
+      if (usb && e.device === usb.dev) { usb = null; setStatus('desconectada'); }
+    });
+  }
+
   async function print(lines, { mode, width, cutter }) {
     if (mode === 'none') return;
     if (mode === 'system') return printSystem(lines, width);
     const bytes = toEscPos(lines, width, cutter);
     if (mode === 'rawbt') return sendRawbt(bytes);
+    if (mode === 'usb') return writeUsb(bytes);
     return writeBle(bytes);
   }
 
   return {
-    connect,
+    connect: mode => (mode === 'usb' ? connectUsb() : connect()),
     print,
     isConnected: () => !!(characteristic && device?.gatt.connected),
     onStatus: fn => { onStatus = fn; },

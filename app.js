@@ -147,7 +147,7 @@ async function loadCatalog() {
 
 function renderHeader() {
   $('#event-title').textContent = catalog.event_name || 'Comandera';
-  const prints = session && session.role !== 'truck' && device.mode === 'ble';
+  const prints = session && session.role !== 'truck' && (device.mode === 'ble' || device.mode === 'usb');
   $('#btn-printer').classList.toggle('hidden', !prints);
 }
 
@@ -640,7 +640,7 @@ Printer.onStatus(s => {
 
 $('#btn-printer').onclick = async () => {
   try {
-    toast('Impresora conectada: ' + await Printer.connect());
+    toast('Impresora conectada: ' + await Printer.connect(device.mode));
   } catch (e) {
     if (e.name !== 'NotFoundError') toast('⚠️ ' + e.message, 5000); // NotFoundError = el usuario canceló
   }
