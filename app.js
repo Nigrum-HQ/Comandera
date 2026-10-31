@@ -10,11 +10,13 @@ const CATALOG_KEY = (CFG.storage || 'comandera.') + 'catalog';
 // Textos que cambian según el evento (en Halloween no hay food trucks sino sectores de la barra).
 const L = {
   truck: 'food truck', trucks: 'trucks', alTruck: 'Al truck', pagar: 'A pagar a trucks', pagarle: 'Pagarle',
+  otroPago: 'Transferencia', otroPagoTicket: 'transferencia/QR', otroIcono: '📱',
   caja: 'Caja', retira: ['Retira en cada food truck', 'con los tickets de abajo'],
   entregar: ['ENTREGAR ESTE TICKET', 'AL FOOD TRUCK {truck}'],
   ...(CFG.labels || {}),
 };
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+document.getElementById('pay-otro-label').textContent = `${L.otroIcono} ${L.otroPago === 'Transferencia' ? 'Transferencia/QR' : L.otroPago}`;
 const COLORS = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 const POLL_MS = 5000;
 
@@ -321,7 +323,7 @@ function customerTicket(order) {
     }),
     { sep: true },
     { text: pad('TOTAL', '$' + money(order.total), w / 2), big: true },
-    { text: order.pay === 'efectivo' ? 'Pago: efectivo' : 'Pago: transferencia/QR' },
+    { text: order.pay === 'efectivo' ? 'Pago: efectivo' : 'Pago: ' + L.otroPagoTicket },
     ...L.retira.map(t => ({ text: t, center: true })),
     { text: 'No valido como factura', center: true },
     { cut: true },
@@ -357,13 +359,13 @@ async function loadPedidos() {
       <div class="card"><small>Pedidos</small><b>${s.count}</b></div>
       <div class="card"><small>Total cobrado</small><b>$${money(s.total)}</b></div>
       <div class="card"><small>💵 Efectivo en caja</small><b>$${money(s.efectivo)}</b></div>
-      <div class="card"><small>📱 Transferencias</small><b>$${money(s.transferencia)}</b></div>
+      <div class="card"><small>${L.otroIcono} ${L.otroPago}</small><b>$${money(s.transferencia)}</b></div>
     </div>`;
   // no re-dibujar si el usuario tiene un pedido abierto
   const open = [...document.querySelectorAll('#order-list details[open]')].map(d => d.dataset.id);
   $('#order-list').innerHTML = orders.map(o => `
     <details class="order ${o.voided ? 'voided' : ''}" data-id="${o.id}" ${open.includes(o.id) ? 'open' : ''}>
-      <summary><b>#${o.num}</b> ${fmtTime(o.created_at)} · $${money(o.total)} · ${o.pay === 'efectivo' ? '💵' : '📱'}${o.register_name && session.role === 'admin' ? ` · <small>${esc(o.register_name)}</small>` : ''} ${o.voided ? '<em>ANULADO</em>' : ''}</summary>
+      <summary><b>#${o.num}</b> ${fmtTime(o.created_at)} · $${money(o.total)} · ${o.pay === 'efectivo' ? '💵' : L.otroIcono}${o.register_name && session.role === 'admin' ? ` · <small>${esc(o.register_name)}</small>` : ''} ${o.voided ? '<em>ANULADO</em>' : ''}</summary>
       <ul>${o.items.map(i => `<li>${i.qty} x ${esc(i.name)} <small>(${esc(i.truck_name)})</small></li>`).join('')}</ul>
       ${o.voided ? '' : `<div class="row"><button data-reprint="${o.id}" class="secondary">Reimprimir</button><button data-void="${o.id}" class="danger">Anular</button></div>`}
     </details>`).join('') || '<p class="hint">Todavía no hay pedidos hoy.</p>';
@@ -389,11 +391,11 @@ function adminSummaryHtml(s) {
       <div class="card"><small>${L.pagar}</small><b>$${money(s.cost)}</b></div>
       <div class="card"><small>Pedidos</small><b>${s.count}</b></div>
       <div class="card"><small>💵 Efectivo</small><b>$${money(s.efectivo)}</b></div>
-      <div class="card"><small>📱 Transferencia</small><b>$${money(s.transferencia)}</b></div>
+      <div class="card"><small>${L.otroIcono} ${L.otroPago}</small><b>$${money(s.transferencia)}</b></div>
     </div>
     ${s.per_register && s.per_register.length ? `<h3>Por ${L.caja.toLowerCase()}</h3>
     <table>
-      <tr><th>${L.caja}</th><th>Pedidos</th><th>💵 Efectivo</th><th>📱 Transf.</th><th>Total</th></tr>
+      <tr><th>${L.caja}</th><th>Pedidos</th><th>💵 Efectivo</th><th>${L.otroIcono} ${L.otroPago}</th><th>Total</th></tr>
       ${s.per_register.map(r => `<tr><td><b>${esc(r.name)}</b></td><td>${r.pedidos}</td><td>$${money(r.efectivo)}</td><td>$${money(r.transferencia)}</td><td><b>$${money(r.total)}</b></td></tr>`).join('')}
     </table>` : ''}
     <h3>Por ${L.truck}</h3>
@@ -450,14 +452,14 @@ function cierreTicket(sum) {
       ...s.per_register.flatMap(r => [
         { text: r.name.toUpperCase(), bold: true },
         { text: pad('  Efectivo', '$' + money(r.efectivo), w) },
-        { text: pad('  Transferencia', '$' + money(r.transferencia), w) },
+        { text: pad('  ' + L.otroPago, '$' + money(r.transferencia), w) },
       ]),
       { sep: true },
     ] : []),
     { text: pad('Pedidos', s.count, w) },
     { text: pad('Total vendido', '$' + money(s.total), w) },
     { text: pad('  Efectivo', '$' + money(s.efectivo), w) },
-    { text: pad('  Transferencia', '$' + money(s.transferencia), w) },
+    { text: pad('  ' + L.otroPago, '$' + money(s.transferencia), w) },
     { text: pad(L.pagar, '$' + money(s.cost), w) },
     { text: pad('GANANCIA', '$' + money(s.profit), w), bold: true },
     { cut: true },
