@@ -45,6 +45,8 @@
   <!-- PEDIDOS DEL DÍA (caja y admin) -->
   <section id="view-pedidos" class="view">
     <div id="caja-summary"></div>
+    <button id="btn-retiro" class="secondary wide hidden">💸 Registrar retiro de efectivo</button>
+    <div id="retiros-list"></div>
     <h3>Pedidos de hoy</h3>
     <div id="order-list"></div>
   </section>
@@ -122,8 +124,8 @@
     <div id="cart-items"></div>
     <div class="total-line">Total <b>$<span id="cart-total2">0</span></b></div>
     <div class="pay">
-      <label><input type="radio" name="pay" value="efectivo" checked> 💵 Efectivo</label>
-      <label><input type="radio" name="pay" value="transferencia"> <span id="pay-otro-label">📱 Transferencia/QR</span></label>
+      <label id="pay-efectivo"><input type="radio" name="pay" value="efectivo" checked> 💵 Efectivo</label>
+      <label id="pay-otro"><input type="radio" name="pay" value="transferencia"> <span id="pay-otro-label">📱 Transferencia/QR</span></label>
     </div>
     <div class="row">
       <button id="btn-clear" class="secondary">Vaciar</button>

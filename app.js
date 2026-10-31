@@ -89,7 +89,7 @@ async function submitPin() {
   busy = true;
   try {
     const r = await Api.rpc(setupMode ? 'setup_admin' : 'login', { p_pin: pin });
-    session = { pin, role: r.role, truck_id: r.truck_id, truck_name: r.truck_name, register_name: r.register_name };
+    session = { pin, role: r.role, truck_id: r.truck_id, truck_name: r.truck_name, register_name: r.register_name, pays: r.pays };
     writeJson(SESSION_KEY, session);
     pin = '';
     await startApp();
@@ -243,7 +243,16 @@ function renderCart() {
   });
 }
 
-$('#btn-cart').onclick = () => { if (cartLines().length) $('#cart-sheet').classList.remove('hidden'); };
+// Medios de pago que acepta esta caja (ej. una barra que solo cobra con posnet).
+const allowedPays = () => catalog.pays || session?.pays || ['efectivo', 'transferencia'];
+function resetPay() {
+  const pays = allowedPays();
+  $('#pay-efectivo').classList.toggle('hidden', !pays.includes('efectivo'));
+  $('#pay-otro').classList.toggle('hidden', !pays.includes('transferencia'));
+  document.querySelector(`input[name=pay][value=${pays[0]}]`).checked = true;
+}
+
+$('#btn-cart').onclick = () => { if (cartLines().length) { resetPay(); $('#cart-sheet').classList.remove('hidden'); } };
 $('#btn-clear').onclick = () => { cart = {}; $('#cart-sheet').classList.add('hidden'); renderVender(); };
 document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => $('#' + b.dataset.close).classList.add('hidden')));
 
@@ -260,7 +269,7 @@ $('#btn-cobrar').onclick = async () => {
     });
     cart = {};
     $('#cart-sheet').classList.add('hidden');
-    document.querySelector('input[name=pay][value=efectivo]').checked = true;
+    resetPay();
     renderVender();
     toast(`Pedido #${order.num} cobrado · $${money(order.total)}`);
     await printOrder(order);
@@ -358,9 +367,13 @@ async function loadPedidos() {
     <div class="cards">
       <div class="card"><small>Pedidos</small><b>${s.count}</b></div>
       <div class="card"><small>Total cobrado</small><b>$${money(s.total)}</b></div>
-      <div class="card"><small>💵 Efectivo en caja</small><b>$${money(s.efectivo)}</b></div>
+      <div class="card"><small>💵 Efectivo cobrado</small><b>$${money(s.efectivo)}</b></div>
       <div class="card"><small>${L.otroIcono} ${L.otroPago}</small><b>$${money(s.transferencia)}</b></div>
+      ${s.retiros !== undefined ? `
+      <div class="card"><small>💸 Retiros</small><b>$${money(s.retiros)}</b></div>
+      <div class="card profit"><small>💵 Tiene que haber en caja</small><b>$${money(s.en_caja)}</b></div>` : ''}
     </div>`;
+  loadRetiros(s);
   // no re-dibujar si el usuario tiene un pedido abierto
   const open = [...document.querySelectorAll('#order-list details[open]')].map(d => d.dataset.id);
   $('#order-list').innerHTML = orders.map(o => `
@@ -377,6 +390,59 @@ async function loadPedidos() {
   $('#order-list').querySelectorAll('[data-reprint]').forEach(b => b.onclick = () => printOrder(orders.find(x => x.id === b.dataset.reprint)));
 }
 
+// ---------- Retiros de efectivo ----------
+async function loadRetiros(s) {
+  const soportado = s.retiros !== undefined; // la base del patio todavía no tiene retiros
+  const puedeRetirar = soportado && session.role === 'caja' && allowedPays().includes('efectivo');
+  $('#btn-retiro').classList.toggle('hidden', !puedeRetirar);
+  if (!soportado) { $('#retiros-list').innerHTML = ''; return; }
+  let list;
+  try { list = await call('withdrawals_today'); } catch { return; }
+  $('#retiros-list').innerHTML = list.length ? `<h3>Retiros de efectivo</h3>` + list.map(w => `
+    <div class="order ${w.voided ? 'voided' : ''}">
+      <div class="kitchen-head"><b>💸 $${money(w.amount)}</b><span>${fmtTime(w.created_at)}${session.role === 'admin' && w.register_name ? ' · ' + esc(w.register_name) : ''}${w.voided ? ' · ANULADO' : ''}</span></div>
+      ${w.note ? `<small class="hint">${esc(w.note)}</small>` : ''}
+      ${w.voided ? '' : `<div class="row"><button class="secondary small" data-reprint-ret="${w.id}">Reimprimir</button><button class="danger small" data-void-ret="${w.id}">Anular</button></div>`}
+    </div>`).join('') : '';
+  $('#retiros-list').querySelectorAll('[data-void-ret]').forEach(b => b.onclick = async () => {
+    const w = list.find(x => x.id === b.dataset.voidRet);
+    if (!confirm(`¿Anular el retiro de $${money(w.amount)}? Solo si se cargó mal.`)) return;
+    try { await call('void_withdrawal', { p_id: w.id }); toast('Retiro anulado'); loadPedidos(); } catch (e) { toast(e.message); }
+  });
+  $('#retiros-list').querySelectorAll('[data-reprint-ret]').forEach(b => b.onclick = () => doPrint(retiroTicket(list.find(x => x.id === b.dataset.reprintRet))));
+}
+
+function retiroTicket(w) {
+  const lines = [
+    { text: catalog.event_name, bold: true, center: true },
+    { text: 'RETIRO DE EFECTIVO', big: true, center: true },
+    { text: `${fmtDate(w.created_at)} ${fmtTime(w.created_at)}`, center: true },
+    { text: w.register_name || session.register_name || '', center: true },
+    { sep: true },
+    { text: 'MONTO RETIRADO', bold: true },
+    { text: '$' + money(w.amount), big: true, center: true },
+  ];
+  if (w.note) lines.push({ text: w.note });
+  if (w.en_caja !== undefined) lines.push({ sep: true }, { text: pad('Queda en caja', '$' + money(w.en_caja), device.width) });
+  lines.push({ text: '' }, { text: '' }, { text: 'Entrega: ____________________' }, { text: '' }, { text: 'Recibe:  ____________________' }, { cut: true });
+  return lines;
+}
+
+$('#btn-retiro').onclick = async () => {
+  const txt = prompt('¿Cuánto efectivo se retira? (solo el número, ej: 50000)');
+  if (txt === null) return;
+  const amount = Math.round(Number(String(txt).replace(/[.$\s]/g, '').replace(',', '.')));
+  if (!amount || amount <= 0) return toast('Monto inválido');
+  const note = prompt('¿Quién lo retira? (opcional)') || '';
+  if (!confirm(`¿Registrar retiro de $${money(amount)}?`)) return;
+  try {
+    const w = await call('create_withdrawal', { p_amount: amount, p_note: note });
+    toast(`Retiro de $${money(amount)} registrado`);
+    await doPrint(retiroTicket(w));
+    loadPedidos();
+  } catch (e) { toast('⚠️ ' + e.message, 4000); }
+};
+
 // ---------- En vivo (admin) ----------
 let lastSummary = null;
 
@@ -392,11 +458,14 @@ function adminSummaryHtml(s) {
       <div class="card"><small>Pedidos</small><b>${s.count}</b></div>
       <div class="card"><small>💵 Efectivo</small><b>$${money(s.efectivo)}</b></div>
       <div class="card"><small>${L.otroIcono} ${L.otroPago}</small><b>$${money(s.transferencia)}</b></div>
+      ${s.retiros !== undefined ? `
+      <div class="card"><small>💸 Retiros de efectivo</small><b>$${money(s.retiros)}</b></div>
+      <div class="card"><small>💵 Efectivo en cajas</small><b>$${money(s.en_caja)}</b></div>` : ''}
     </div>
     ${s.per_register && s.per_register.length ? `<h3>Por ${L.caja.toLowerCase()}</h3>
     <table>
-      <tr><th>${L.caja}</th><th>Pedidos</th><th>💵 Efectivo</th><th>${L.otroIcono} ${L.otroPago}</th><th>Total</th></tr>
-      ${s.per_register.map(r => `<tr><td><b>${esc(r.name)}</b></td><td>${r.pedidos}</td><td>$${money(r.efectivo)}</td><td>$${money(r.transferencia)}</td><td><b>$${money(r.total)}</b></td></tr>`).join('')}
+      <tr><th>${L.caja}</th><th>Pedidos</th><th>💵 Efectivo</th><th>${L.otroIcono} ${L.otroPago}</th>${s.retiros !== undefined ? '<th>💸 Retiros</th><th>En caja</th>' : ''}<th>Total</th></tr>
+      ${s.per_register.map(r => `<tr><td><b>${esc(r.name)}</b></td><td>${r.pedidos}</td><td>$${money(r.efectivo)}</td><td>$${money(r.transferencia)}</td>${s.retiros !== undefined ? `<td>$${money(r.retiros)}</td><td><b>$${money(r.en_caja)}</b></td>` : ''}<td><b>$${money(r.total)}</b></td></tr>`).join('')}
     </table>` : ''}
     <h3>Por ${L.truck}</h3>
     ${per.map(r => `
@@ -453,6 +522,10 @@ function cierreTicket(sum) {
         { text: r.name.toUpperCase(), bold: true },
         { text: pad('  Efectivo', '$' + money(r.efectivo), w) },
         { text: pad('  ' + L.otroPago, '$' + money(r.transferencia), w) },
+        ...(r.retiros !== undefined ? [
+          { text: pad('  Retiros', '$' + money(r.retiros), w) },
+          { text: pad('  En caja', '$' + money(r.en_caja), w), bold: true },
+        ] : []),
       ]),
       { sep: true },
     ] : []),
@@ -648,7 +721,8 @@ function renderRegisters() {
         <input class="r-name" data-r="${r.id}" value="${esc(r.name)}" placeholder="Nombre">
         <input class="r-pin" data-r="${r.id}" value="${esc(r.pin || '')}" inputmode="numeric" maxlength="8" placeholder="PIN">
         <button class="danger small" data-delreg="${r.id}">🗑</button>
-      </div>`).join('')}
+      </div>
+      ${r.pays ? `<label class="check reg-pays"><input type="checkbox" class="r-cash" data-r="${r.id}" ${r.pays.includes('efectivo') ? 'checked' : ''}> Acepta efectivo (si no, solo ${L.otroPago.toLowerCase()})</label>` : ''}`).join('')}
     <button id="btn-addreg" class="secondary wide">+ Agregar ${L.caja.toLowerCase()}</button>`;
   const saveReg = async (fn, args) => {
     try { await call(fn, args); toast('Guardado ✓', 1200); } catch (e) { toast('⚠️ ' + e.message, 4000); }
@@ -657,6 +731,8 @@ function renderRegisters() {
   };
   box.querySelectorAll('.r-name').forEach(i => i.onchange = () => saveReg('save_register', { p_data: { id: i.dataset.r, name: i.value } }));
   box.querySelectorAll('.r-pin').forEach(i => i.onchange = () => saveReg('save_register', { p_data: { id: i.dataset.r, pin: i.value.trim() } }));
+  box.querySelectorAll('.r-cash').forEach(i => i.onchange = () => saveReg('save_register',
+    { p_data: { id: i.dataset.r, pays: i.checked ? ['efectivo', 'transferencia'] : ['transferencia'] } }));
   box.querySelectorAll('[data-delreg]').forEach(b => b.onclick = () => {
     if (confirm('¿Borrar esta caja? Sus ventas quedan registradas.')) saveReg('delete_register', { p_id: b.dataset.delreg });
   });
