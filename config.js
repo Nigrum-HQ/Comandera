@@ -16,6 +16,7 @@ const EVENTOS = {
     theme: 'halloween',
     manifest: 'manifest-halloween.webmanifest',
     labels: {
+      otroPago: 'Posnet', otroPagoTicket: 'posnet', otroIcono: '💳',
       truck: 'sector', trucks: 'sectores', alTruck: 'Costo', pagar: 'Costo de mercadería', pagarle: 'Costo',
       caja: 'Barra', retira: ['Retira tu pedido en la barra', 'con este ticket'],
       entregar: ['ENTREGAR EN LA BARRA'],
