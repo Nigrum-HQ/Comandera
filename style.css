@@ -138,3 +138,31 @@ button:disabled { opacity: .6; }
 .order.kitchen { border-left: 6px solid var(--dark); }
 .kitchen-head { display: flex; justify-content: space-between; font-size: 1.1rem; margin-bottom: 4px; }
 .kitchen-item { font-size: 1.2rem; font-weight: 600; }
+
+/* ---------- cajas con nombre (Barra 1, Barra 2…) ---------- */
+.reg-row { display: grid; grid-template-columns: 1fr 110px 44px; gap: 8px; margin: 8px 0; align-items: center; }
+
+/* ---------- tema Halloween (evento aparte) ---------- */
+body.tema-halloween {
+  --bg: #120d1d; --fg: #f5f3ff; --card: #1f1830; --muted: #a59bc0; --line: #3a2f52;
+  --dark: #2a0f3d; --ok: #f97316;
+}
+.tema-halloween header { background: linear-gradient(90deg, #2a0f3d, #4c1d95); }
+.tema-halloween header h1::before { content: '🎃 '; }
+.tema-halloween .card, .tema-halloween table, .tema-halloween .order, .tema-halloween .truck-cfg,
+.tema-halloween .truck-row, .tema-halloween .cart-line, .tema-halloween .pay label, .tema-halloween nav,
+.tema-halloween .keypad button, .tema-halloween .chip { background: var(--card); color: var(--fg); }
+.tema-halloween .keypad button.ok { background: var(--ok); color: #1a0f00; font-weight: 700; }
+.tema-halloween .keypad button.secondary, .tema-halloween button.secondary, .tema-halloween .button.secondary { background: #2e2445; color: var(--fg); }
+.tema-halloween input, .tema-halloween select { background: #160f24; color: var(--fg); border-color: var(--line); }
+.tema-halloween .card.profit { background: #3b2410; }
+.tema-halloween .card.profit b { color: #fdba74; }
+.tema-halloween th, .tema-halloween td { border-color: var(--line); }
+.tema-halloween tr.tot td { background: #2a2140; }
+.tema-halloween .bar { background: #2e2445; }
+.tema-halloween nav button.active { color: #fb923c; }
+.tema-halloween #cart-bar button { background: var(--ok); color: #1a0f00; }
+.tema-halloween button.ok { background: var(--ok); color: #1a0f00; }
+.tema-halloween .live { color: #fb923c; }
+.tema-halloween .pin-dots .dot { background: #fb923c; }
+.tema-halloween .login h2::before { content: '🦇 '; }

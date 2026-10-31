@@ -385,8 +385,9 @@ begin
   update products set active = false where id = p_id;
 end $$;
 
--- Solo las funciones públicas se pueden llamar desde la app.
-revoke execute on all functions in schema public from public, anon, authenticated;
+-- Solo las funciones públicas se pueden llamar desde la app (las internas, que empiezan con _, no).
+revoke execute on function _auth(text, text[]), _current_day(), _check_pin(text, text, uuid),
+  _summary(uuid, text, uuid) from public, anon, authenticated;
 grant execute on function
   needs_setup(), setup_admin(text), login(text), catalog(text),
   create_order(text, text, jsonb), void_order(text, uuid), orders_today(text),
