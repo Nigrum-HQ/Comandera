@@ -89,7 +89,8 @@
       <label class="field">Nombre del evento (sale en los tickets)<input id="cfg-event" type="text"></label>
       <label class="field">PIN de la caja<input id="cfg-pin-caja" type="text" inputmode="numeric" maxlength="8"></label>
       <label class="field">Tu PIN de admin<input id="cfg-pin-admin" type="text" inputmode="numeric" maxlength="8"></label>
-      <p class="hint">Los PINs de cada food truck se ponen en 🍔 Productos.</p>
+      <p id="cfg-trucks-hint" class="hint">Los PINs de cada food truck se ponen en 🍔 Productos.</p>
+      <div id="cfg-registers" class="hidden"></div>
     </div>
     <h3>Impresora de este celular</h3>
     <label class="field">Cómo imprimir
@@ -109,6 +110,7 @@
     </label>
     <label class="check"><input id="cfg-customer" type="checkbox"> Imprimir también ticket para el cliente</label>
     <label class="check"><input id="cfg-cut" type="checkbox"> La impresora tiene cortador automático</label>
+    <label class="check"><input id="cfg-comandas" type="checkbox"> <span id="cfg-comandas-label">Imprimir un ticket por food truck</span></label>
     <button id="btn-test">Imprimir prueba</button>
   </section>
 </main>

@@ -2,9 +2,19 @@
 // Tres pantallas según el PIN: caja (vende), admin (precios, productos, ganancia en vivo)
 // y food truck (sus pedidos y lo que tiene para cobrar). Los datos viven en Supabase.
 
-const SESSION_KEY = 'comandera.session';
-const DEVICE_KEY = 'comandera.device';
-const CATALOG_KEY = 'comandera.catalog';
+const CFG = window.COMANDERA_CONFIG || {};
+const SESSION_KEY = (CFG.storage || 'comandera.') + 'session';
+const DEVICE_KEY = (CFG.storage || 'comandera.') + 'device';
+const CATALOG_KEY = (CFG.storage || 'comandera.') + 'catalog';
+
+// Textos que cambian según el evento (en Halloween no hay food trucks sino sectores de la barra).
+const L = {
+  truck: 'food truck', trucks: 'trucks', alTruck: 'Al truck', pagar: 'A pagar a trucks', pagarle: 'Pagarle',
+  caja: 'Caja', retira: ['Retira en cada food truck', 'con los tickets de abajo'],
+  entregar: ['ENTREGAR ESTE TICKET', 'AL FOOD TRUCK {truck}'],
+  ...(CFG.labels || {}),
+};
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 const COLORS = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 const POLL_MS = 5000;
 
@@ -20,7 +30,7 @@ function readJson(key, fallback) {
 const writeJson = (key, v) => localStorage.setItem(key, JSON.stringify(v));
 
 let session = readJson(SESSION_KEY, null); // {pin, role, truck_id, truck_name}
-let device = { mode: 'ble', width: 32, customer: true, cutter: false, ...readJson(DEVICE_KEY, {}) };
+let device = { mode: 'ble', width: 32, customer: true, cutter: false, comandas: CFG.comandas ?? true, ...readJson(DEVICE_KEY, {}) };
 let catalog = readJson(CATALOG_KEY, { event_name: 'Comandera', trucks: [], products: [] });
 let cart = {}; // productId -> cantidad
 let filter = 'all';
@@ -54,7 +64,7 @@ const VIEWS = {
   admin: [['vivo', '📈', 'En vivo'], ['vender', '🛒', 'Vender'], ['pedidos', '📋', 'Pedidos'], ['productos', '🍔', 'Productos'], ['ajustes', '⚙️', 'Ajustes']],
   truck: [['truck', '🚚', 'Mi día'], ['truckhist', '📅', 'Historial']],
 };
-const ROLE_LABEL = { caja: 'Caja', admin: 'Administrador' };
+const ROLE_LABEL = { caja: L.caja, admin: 'Administrador' };
 
 let pin = '';
 let setupMode = false;
@@ -77,7 +87,7 @@ async function submitPin() {
   busy = true;
   try {
     const r = await Api.rpc(setupMode ? 'setup_admin' : 'login', { p_pin: pin });
-    session = { pin, role: r.role, truck_id: r.truck_id, truck_name: r.truck_name };
+    session = { pin, role: r.role, truck_id: r.truck_id, truck_name: r.truck_name, register_name: r.register_name };
     writeJson(SESSION_KEY, session);
     pin = '';
     await startApp();
@@ -107,7 +117,8 @@ async function showLogin() {
   }
   $('#login-title').textContent = setupMode ? 'Primera vez: elegí el PIN del admin' : 'Ingresá tu PIN';
   if (setupMode) $('#login-hint').textContent = 'De 4 a 8 números. Con este PIN vas a cargar productos, precios y ver la ganancia.';
-  else if (!$('#login-hint').textContent) $('#login-hint').textContent = 'Caja, admin o food truck: cada uno tiene su PIN.';
+  else if (!$('#login-hint').textContent) $('#login-hint').textContent = CFG.evento
+    ? `${L.caja} o admin: cada uno tiene su PIN.` : 'Caja, admin o food truck: cada uno tiene su PIN.';
 }
 
 function logout() {
@@ -125,8 +136,13 @@ async function startApp() {
   $('#app').classList.remove('hidden');
   $('#nav').classList.remove('hidden');
   $('#btn-logout').classList.remove('hidden');
-  $('#role-label').textContent = session.role === 'truck' ? session.truck_name : ROLE_LABEL[session.role];
+  $('#role-label').textContent = session.role === 'truck' ? session.truck_name : (session.register_name || ROLE_LABEL[session.role]);
   $('#admin-settings').classList.toggle('hidden', session.role !== 'admin');
+  if (CFG.evento) { // en un evento aparte (barras) no hay caja general ni food trucks que liquidar
+    $('#cfg-pin-caja').closest('label').classList.add('hidden');
+    $('#cfg-trucks-hint').classList.add('hidden');
+    $('#btn-print-liq').classList.add('hidden');
+  }
   $('#nav').innerHTML = VIEWS[session.role].map(([v, icon, label]) =>
     `<button data-view="${v}">${icon}<span>${label}</span></button>`).join('');
   $('#nav').querySelectorAll('button').forEach(b => b.onclick = () => show(b.dataset.view));
@@ -147,6 +163,7 @@ async function loadCatalog() {
 
 function renderHeader() {
   $('#event-title').textContent = catalog.event_name || 'Comandera';
+  document.title = catalog.event_name || 'Comandera';
   const prints = session && session.role !== 'truck' && (device.mode === 'ble' || device.mode === 'usb');
   $('#btn-printer').classList.toggle('hidden', !prints);
 }
@@ -283,8 +300,7 @@ function truckTicket(order, truckId) {
     { sep: true },
     ...items.map(i => ({ text: `${i.qty} x ${i.name}`, big: true })),
     { sep: true },
-    { text: 'ENTREGAR ESTE TICKET', bold: true, center: true },
-    { text: `AL FOOD TRUCK ${items[0].truck_name.toUpperCase()}`, bold: true, center: true },
+    ...L.entregar.map(t => ({ text: t.replace('{truck}', items[0].truck_name.toUpperCase()), bold: true, center: true })),
     { cut: true },
   ];
 }
@@ -294,7 +310,7 @@ function customerTicket(order) {
   return [
     { text: catalog.event_name, bold: true, center: true },
     { text: `PEDIDO #${order.num}`, big: true, center: true },
-    { text: `${fmtDate(order.created_at)} ${fmtTime(order.created_at)}`, center: true },
+    { text: `${fmtDate(order.created_at)} ${fmtTime(order.created_at)}${order.register_name ? ' - ' + order.register_name : ''}`, center: true },
     { sep: true },
     ...groupByTruck(order.items).flatMap(tid => {
       const items = order.items.filter(i => i.truck_id === tid);
@@ -306,8 +322,7 @@ function customerTicket(order) {
     { sep: true },
     { text: pad('TOTAL', '$' + money(order.total), w / 2), big: true },
     { text: order.pay === 'efectivo' ? 'Pago: efectivo' : 'Pago: transferencia/QR' },
-    { text: 'Retira en cada food truck', center: true },
-    { text: 'con los tickets de abajo', center: true },
+    ...L.retira.map(t => ({ text: t, center: true })),
     { text: 'No valido como factura', center: true },
     { cut: true },
   ];
@@ -324,8 +339,9 @@ async function doPrint(lines) {
 function printOrder(order) {
   const lines = [
     ...(device.customer ? customerTicket(order) : []),
-    ...groupByTruck(order.items).flatMap(t => truckTicket(order, t)),
+    ...(device.comandas ? groupByTruck(order.items).flatMap(t => truckTicket(order, t)) : []),
   ];
+  if (!lines.length) return;
   return doPrint(lines);
 }
 
@@ -347,7 +363,7 @@ async function loadPedidos() {
   const open = [...document.querySelectorAll('#order-list details[open]')].map(d => d.dataset.id);
   $('#order-list').innerHTML = orders.map(o => `
     <details class="order ${o.voided ? 'voided' : ''}" data-id="${o.id}" ${open.includes(o.id) ? 'open' : ''}>
-      <summary><b>#${o.num}</b> ${fmtTime(o.created_at)} · $${money(o.total)} · ${o.pay === 'efectivo' ? '💵' : '📱'} ${o.voided ? '<em>ANULADO</em>' : ''}</summary>
+      <summary><b>#${o.num}</b> ${fmtTime(o.created_at)} · $${money(o.total)} · ${o.pay === 'efectivo' ? '💵' : '📱'}${o.register_name && session.role === 'admin' ? ` · <small>${esc(o.register_name)}</small>` : ''} ${o.voided ? '<em>ANULADO</em>' : ''}</summary>
       <ul>${o.items.map(i => `<li>${i.qty} x ${esc(i.name)} <small>(${esc(i.truck_name)})</small></li>`).join('')}</ul>
       ${o.voided ? '' : `<div class="row"><button data-reprint="${o.id}" class="secondary">Reimprimir</button><button data-void="${o.id}" class="danger">Anular</button></div>`}
     </details>`).join('') || '<p class="hint">Todavía no hay pedidos hoy.</p>';
@@ -370,17 +386,22 @@ function adminSummaryHtml(s) {
     <div class="cards">
       <div class="card"><small>Vendido</small><b>$${money(s.total)}</b></div>
       <div class="card profit"><small>Tu ganancia</small><b>$${money(s.profit)}</b></div>
-      <div class="card"><small>A pagar a trucks</small><b>$${money(s.cost)}</b></div>
+      <div class="card"><small>${L.pagar}</small><b>$${money(s.cost)}</b></div>
       <div class="card"><small>Pedidos</small><b>${s.count}</b></div>
       <div class="card"><small>💵 Efectivo</small><b>$${money(s.efectivo)}</b></div>
       <div class="card"><small>📱 Transferencia</small><b>$${money(s.transferencia)}</b></div>
     </div>
-    <h3>Por food truck</h3>
+    ${s.per_register && s.per_register.length ? `<h3>Por ${L.caja.toLowerCase()}</h3>
+    <table>
+      <tr><th>${L.caja}</th><th>Pedidos</th><th>💵 Efectivo</th><th>📱 Transf.</th><th>Total</th></tr>
+      ${s.per_register.map(r => `<tr><td><b>${esc(r.name)}</b></td><td>${r.pedidos}</td><td>$${money(r.efectivo)}</td><td>$${money(r.transferencia)}</td><td><b>$${money(r.total)}</b></td></tr>`).join('')}
+    </table>` : ''}
+    <h3>Por ${L.truck}</h3>
     ${per.map(r => `
       <div class="truck-row" style="--c:${truckColor(r.truck_id)}">
         <div class="truck-row-head"><b>${esc(r.name)}</b><span>${r.units} u.</span></div>
         <div class="bar"><span style="width:${(r.sold / max) * 100}%"></span></div>
-        <div class="truck-row-nums"><span>Vendió $${money(r.sold)}</span><span>Pagarle <b>$${money(r.pay)}</b></span><span>Ganancia $${money(r.sold - r.pay)}</span></div>
+        <div class="truck-row-nums"><span>Vendió $${money(r.sold)}</span><span>${L.pagarle} <b>$${money(r.pay)}</b></span><span>Ganancia $${money(r.sold - r.pay)}</span></div>
       </div>`).join('')}
     ${s.products.length ? `<h3>Lo más vendido</h3>
     <table>
@@ -405,7 +426,7 @@ async function loadHistory() {
     $('#history').innerHTML = days.map(d => `
       <details class="order"><summary>${fmtDate(d.started_at)} ${fmtTime(d.started_at)} → ${fmtTime(d.closed_at)} · $${money(d.summary.total)} · ganancia <b>$${money(d.summary.profit)}</b></summary>
       <table>
-        <tr><th>Food truck</th><th>Vendido</th><th>Pagado</th></tr>
+        <tr><th>${cap(L.truck)}</th><th>Vendido</th><th>${L.alTruck}</th></tr>
         ${d.summary.per.map(r => `<tr><td>${esc(r.name)}</td><td>$${money(r.sold)}</td><td>$${money(r.pay)}</td></tr>`).join('')}
       </table></details>`).join('') || '<p class="hint">Sin días cerrados.</p>';
   } catch (e) { toast(e.message); }
@@ -425,11 +446,19 @@ function cierreTicket(sum) {
       { text: pad('  A PAGAR', '$' + money(r.pay), w), bold: true },
     ]),
     { sep: true },
+    ...(s.per_register && s.per_register.length ? [
+      ...s.per_register.flatMap(r => [
+        { text: r.name.toUpperCase(), bold: true },
+        { text: pad('  Efectivo', '$' + money(r.efectivo), w) },
+        { text: pad('  Transferencia', '$' + money(r.transferencia), w) },
+      ]),
+      { sep: true },
+    ] : []),
     { text: pad('Pedidos', s.count, w) },
     { text: pad('Total vendido', '$' + money(s.total), w) },
     { text: pad('  Efectivo', '$' + money(s.efectivo), w) },
     { text: pad('  Transferencia', '$' + money(s.transferencia), w) },
-    { text: pad('Pagar a trucks', '$' + money(s.cost), w) },
+    { text: pad(L.pagar, '$' + money(s.cost), w) },
     { text: pad('GANANCIA', '$' + money(s.profit), w), bold: true },
     { cut: true },
   ];
@@ -462,9 +491,9 @@ $('#btn-print-liq').onclick = async () => { await loadVivo(); if (lastSummary) d
 $('#btn-csv').onclick = async () => {
   let orders;
   try { orders = await call('orders_today'); } catch (e) { return toast(e.message); }
-  const rows = [['Pedido', 'Fecha', 'Hora', 'Pago', 'Anulado', 'Food truck', 'Producto', 'Cantidad', 'Precio', 'Al truck', 'Subtotal', 'Ganancia']];
+  const rows = [['Pedido', 'Fecha', 'Hora', L.caja, 'Pago', 'Anulado', cap(L.truck), 'Producto', 'Cantidad', 'Precio', L.alTruck, 'Subtotal', 'Ganancia']];
   for (const o of orders.slice().reverse()) for (const i of o.items) {
-    rows.push([o.num, fmtDate(o.created_at), fmtTime(o.created_at), o.pay, o.voided ? 'SI' : '', i.truck_name, i.name, i.qty, i.price, i.cost, i.qty * i.price, i.qty * (i.price - i.cost)]);
+    rows.push([o.num, fmtDate(o.created_at), fmtTime(o.created_at), o.register_name || '', o.pay, o.voided ? 'SI' : '', i.truck_name, i.name, i.qty, i.price, i.cost, i.qty * i.price, i.qty * (i.price - i.cost)]);
   }
   const csv = rows.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';')).join('\n');
   download(`ventas-${new Date().toISOString().slice(0, 10)}.csv`, '﻿' + csv, 'text/csv');
@@ -510,8 +539,8 @@ function renderProductos() {
         <input class="t-name" data-t="${t.id}" value="${esc(t.name)}" placeholder="Nombre">
         <button class="danger small" data-deltruck="${t.id}">🗑</button>
       </div>
-      <label class="field inline">PIN del truck <input class="t-pin" data-t="${t.id}" value="${esc(t.pin || '')}" inputmode="numeric" maxlength="8" placeholder="sin PIN"></label>
-      <div class="prod-head"><span>Producto</span><span>Precio</span><span>Al truck</span><span></span></div>
+      <label class="field inline ${CFG.evento ? 'hidden' : ''}">PIN del truck <input class="t-pin" data-t="${t.id}" value="${esc(t.pin || '')}" inputmode="numeric" maxlength="8" placeholder="sin PIN"></label>
+      <div class="prod-head"><span>Producto</span><span>Precio</span><span>${L.alTruck}</span><span></span></div>
       ${catalog.products.filter(p => p.truck_id === t.id).map(p => `
         <div class="prod-row">
           <input data-p="${p.id}" data-k="name" value="${esc(p.name)}">
@@ -521,7 +550,7 @@ function renderProductos() {
         </div>
         <div class="margin">Ganancia por unidad: <b class="${p.price - p.cost < 0 ? 'neg' : ''}">$${money(p.price - p.cost)}</b></div>`).join('')}
       <button class="secondary small" data-addprod="${t.id}">+ Producto</button>
-    </div>`).join('') + '<button id="btn-addtruck" class="secondary wide">+ Agregar food truck</button>';
+    </div>`).join('') + `<button id="btn-addtruck" class="secondary wide">+ Agregar ${L.truck}</button>`;
 
   const box = $('#cfg-trucks');
   box.querySelectorAll('.t-name').forEach(i => i.onchange = () => save('save_truck', { p_data: { id: i.dataset.t, name: i.value } }));
@@ -538,10 +567,10 @@ function renderProductos() {
     if (confirm('¿Borrar este producto?')) save('delete_product', { p_id: b.dataset.delprod }, true);
   });
   box.querySelectorAll('[data-deltruck]').forEach(b => b.onclick = () => {
-    if (confirm('¿Borrar este food truck y sus productos? Las ventas ya hechas quedan registradas.')) save('delete_truck', { p_id: b.dataset.deltruck }, true);
+    if (confirm(`¿Borrar este ${L.truck} y sus productos? Las ventas ya hechas quedan registradas.`)) save('delete_truck', { p_id: b.dataset.deltruck }, true);
   });
   $('#btn-addtruck').onclick = () => save('save_truck', { p_data: {
-    name: 'Food Truck ' + (catalog.trucks.length + 1),
+    name: cap(L.truck) + ' ' + (catalog.trucks.length + 1),
     color: COLORS[catalog.trucks.length % COLORS.length],
     sort: catalog.trucks.length,
   } }, true);
@@ -588,6 +617,9 @@ function renderAjustes() {
   $('#cfg-width').value = String(device.width);
   $('#cfg-customer').checked = device.customer;
   $('#cfg-cut').checked = device.cutter;
+  $('#cfg-comandas').checked = device.comandas;
+  $('#cfg-comandas-label').textContent = `Imprimir un ticket por ${L.truck} (para entregar en cada uno)`;
+  if (session.role === 'admin') renderRegisters();
   if (session.role === 'admin') {
     $('#cfg-event').value = catalog.event_name || '';
     $('#cfg-pin-caja').value = catalog.pin_caja || '';
@@ -600,6 +632,34 @@ $('#cfg-mode').onchange = e => { device.mode = e.target.value; saveDevice(); };
 $('#cfg-width').onchange = e => { device.width = Number(e.target.value); saveDevice(); };
 $('#cfg-customer').onchange = e => { device.customer = e.target.checked; saveDevice(); };
 $('#cfg-cut').onchange = e => { device.cutter = e.target.checked; saveDevice(); };
+$('#cfg-comandas').onchange = e => { device.comandas = e.target.checked; saveDevice(); };
+
+// Cajas con nombre (ej. Barra 1, Barra 2): cada una con su PIN y sus propios totales.
+function renderRegisters() {
+  const box = $('#cfg-registers');
+  if (!Array.isArray(catalog.registers)) { box.classList.add('hidden'); return; } // la base todavía no las tiene
+  box.classList.remove('hidden');
+  box.innerHTML = `<h3>${L.caja === 'Caja' ? 'Cajas' : L.caja + 's'}</h3>
+    <p class="hint">Cada una entra con su PIN y ve solo sus ventas. En 📈 En vivo ves el total de cada una.</p>
+    ${catalog.registers.map(r => `
+      <div class="reg-row">
+        <input class="r-name" data-r="${r.id}" value="${esc(r.name)}" placeholder="Nombre">
+        <input class="r-pin" data-r="${r.id}" value="${esc(r.pin || '')}" inputmode="numeric" maxlength="8" placeholder="PIN">
+        <button class="danger small" data-delreg="${r.id}">🗑</button>
+      </div>`).join('')}
+    <button id="btn-addreg" class="secondary wide">+ Agregar ${L.caja.toLowerCase()}</button>`;
+  const saveReg = async (fn, args) => {
+    try { await call(fn, args); toast('Guardado ✓', 1200); } catch (e) { toast('⚠️ ' + e.message, 4000); }
+    await loadCatalog();
+    renderRegisters();
+  };
+  box.querySelectorAll('.r-name').forEach(i => i.onchange = () => saveReg('save_register', { p_data: { id: i.dataset.r, name: i.value } }));
+  box.querySelectorAll('.r-pin').forEach(i => i.onchange = () => saveReg('save_register', { p_data: { id: i.dataset.r, pin: i.value.trim() } }));
+  box.querySelectorAll('[data-delreg]').forEach(b => b.onclick = () => {
+    if (confirm('¿Borrar esta caja? Sus ventas quedan registradas.')) saveReg('delete_register', { p_id: b.dataset.delreg });
+  });
+  $('#btn-addreg').onclick = () => saveReg('save_register', { p_data: { name: `${L.caja} ${catalog.registers.length + 1}`, sort: catalog.registers.length } });
+}
 
 async function saveSettings(data) {
   try {

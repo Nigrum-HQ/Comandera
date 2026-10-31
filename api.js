@@ -10,7 +10,7 @@ const Api = (() => {
     const timer = setTimeout(() => ctrl.abort(), 12000);
     let res;
     try {
-      res = await fetch(`${cfg.supabaseUrl}/rest/v1/rpc/${fn}`, {
+      res = await fetch(`${cfg.supabaseUrl}/rest/v1/rpc/${cfg.prefix || ''}${fn}`, {
         method: 'POST',
         headers: { apikey: cfg.supabaseKey, 'Content-Type': 'application/json' },
         body: JSON.stringify(args),
