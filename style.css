@@ -166,3 +166,4 @@ body.tema-halloween {
 .tema-halloween .live { color: #fb923c; }
 .tema-halloween .pin-dots .dot { background: #fb923c; }
 .tema-halloween .login h2::before { content: '🦇 '; }
+.reg-pays { margin: -2px 0 12px; font-size: .9rem; }
