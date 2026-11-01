@@ -55,7 +55,10 @@ async function call(fn, args = {}) {
   try {
     return await Api.rpc(fn, { p_pin: session.pin, ...args });
   } catch (e) {
-    if (e.code === '28000') { logout(); toast('Tu PIN cambió, ingresá de nuevo'); }
+    if (e.code === '28000') { // PIN cambiado o turno terminado: vuelve al ingreso con el motivo
+      logout();
+      toast(e.message === 'PIN incorrecto' ? 'Tu PIN cambió, ingresá de nuevo' : e.message, 8000);
+    }
     throw e;
   }
 }
@@ -89,7 +92,7 @@ async function submitPin() {
   busy = true;
   try {
     const r = await Api.rpc(setupMode ? 'setup_admin' : 'login', { p_pin: pin });
-    session = { pin, role: r.role, truck_id: r.truck_id, truck_name: r.truck_name, register_name: r.register_name, pays: r.pays };
+    session = { pin, role: r.role, truck_id: r.truck_id, truck_name: r.truck_name, register_name: r.register_name, pays: r.pays, valid_until: r.valid_until };
     writeJson(SESSION_KEY, session);
     pin = '';
     await startApp();
@@ -138,7 +141,8 @@ async function startApp() {
   $('#app').classList.remove('hidden');
   $('#nav').classList.remove('hidden');
   $('#btn-logout').classList.remove('hidden');
-  $('#role-label').textContent = session.role === 'truck' ? session.truck_name : (session.register_name || ROLE_LABEL[session.role]);
+  $('#role-label').textContent = (session.role === 'truck' ? session.truck_name : (session.register_name || ROLE_LABEL[session.role]))
+    + (session.valid_until ? ` · turno hasta ${fmtTime(session.valid_until)}` : '');
   $('#admin-settings').classList.toggle('hidden', session.role !== 'admin');
   if (CFG.evento) { // en un evento aparte (barras) no hay caja general ni food trucks que liquidar
     $('#cfg-pin-caja').closest('label').classList.add('hidden');
@@ -722,6 +726,7 @@ function renderRegisters() {
         <input class="r-pin" data-r="${r.id}" value="${esc(r.pin || '')}" inputmode="numeric" maxlength="8" placeholder="PIN">
         <button class="danger small" data-delreg="${r.id}">🗑</button>
       </div>
+      ${r.valid_from ? `<div class="hint reg-pays">🕒 Turno ${fmtTime(r.valid_from)} a ${fmtTime(r.valid_until)} (10 min de tolerancia)</div>` : ''}
       ${r.pays ? `<label class="check reg-pays"><input type="checkbox" class="r-cash" data-r="${r.id}" ${r.pays.includes('efectivo') ? 'checked' : ''}> Acepta efectivo (si no, solo ${L.otroPago.toLowerCase()})</label>` : ''}`).join('')}
     <button id="btn-addreg" class="secondary wide">+ Agregar ${L.caja.toLowerCase()}</button>`;
   const saveReg = async (fn, args) => {

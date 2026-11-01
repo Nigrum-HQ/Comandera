@@ -1,6 +1,6 @@
 """Genera el SQL de un evento aparte (por ejemplo Halloween) con sus propias tablas y funciones.
 
-Toma schema.sql + cajas.sql + retiros.sql (o los archivos que se le pasen) y antepone un prefijo (ej. "hw_") a cada tabla, índice y función,
+Toma schema.sql + cajas.sql + retiros.sql + horarios.sql (o los archivos que se le pasen) y antepone un prefijo (ej. "hw_") a cada tabla, índice y función,
 sin tocar el texto entre comillas (las claves JSON que lee la app quedan iguales).
 
 Uso: python3 supabase/evento.py hw_ > /tmp/hw.sql                 (evento nuevo, todo)
@@ -35,6 +35,6 @@ def prefix_sql(sql, pre):
 if __name__ == '__main__':
     pre = sys.argv[1]
     here = Path(__file__).parent
-    files = sys.argv[2:] or ['schema.sql', 'cajas.sql', 'retiros.sql']
+    files = sys.argv[2:] or ['schema.sql', 'cajas.sql', 'retiros.sql', 'horarios.sql']
     sql = '\n'.join((here / f).read_text() for f in files)
     print(prefix_sql(sql, pre))
