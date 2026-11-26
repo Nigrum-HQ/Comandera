@@ -65,13 +65,13 @@ Para probarla en la compu: `python3 -m http.server` y abrir `http://localhost:80
 
 ## Entradas (venta con QR)
 
-Carpeta [`entradas/`](entradas/): venta de entradas nominales para eventos del club (ej. Cena de Fin de Año). Usa la misma base de Supabase, con tablas y funciones aparte (`ent_*`, ver [`supabase/entradas.sql`](supabase/entradas.sql)).
+Carpeta [`entradas/`](entradas/): venta de entradas nominales para eventos del club (ej. Cena de Fin de Año). Usa la misma base de Supabase, con tablas y funciones aparte (`ent_*`, ver [`supabase/entradas.sql`](supabase/entradas.sql) y encima [`supabase/entradas_grupal.sql`](supabase/entradas_grupal.sql)).
 
 | Página | Para quién |
 |---|---|
 | `entradas/` | El público: elige entradas, pone el nombre de cada asistente, transfiere y sube el comprobante |
 | `entradas/admin.html` | Organizador (PIN admin): verifica comprobantes, marca "Pagó", manda los links por WhatsApp, carga ventas a mano, precios y cupo |
-| `entradas/e.html?t=…` | La entrada personal de cada asistente, con su QR (solo aparece cuando el pedido está pagado) |
-| `entradas/puerta.html` | Control de puerta (PIN puerta): escanea el QR con la cámara y avisa si ya ingresó |
+| `entradas/e.html?t=…` | La entrada de la compra: un solo QR con todas las personas y sus DNI (aparece cuando el pago está verificado) |
+| `entradas/puerta.html` | Control de puerta (PIN puerta): escanea el QR, muestra la lista con los DNI y se marca quién entra |
 
-Cada asistente tiene su propia entrada y su propio link. El cupo se controla en la base (no se puede sobrevender).
+Un QR por compra; cada persona con nombre y DNI. El cupo se controla en la base (no se puede sobrevender).
