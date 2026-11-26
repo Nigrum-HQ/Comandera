@@ -173,7 +173,9 @@ function asistentes() {
   return out;
 }
 const datosOk = () => S.nombre.trim().length >= 3 && S.tel.replace(/\D/g, '').length >= 8
-  && (!S.email || /^\S+@\S+\.\S+$/.test(S.email)) && asistentes().every(a => a.nombre.trim().length >= 3);
+  && (!S.email || /^\S+@\S+\.\S+$/.test(S.email))
+  && asistentes().every(a => a.nombre.trim().length >= 3 && dniOk(a.dni));
+const dniOk = d => /^\d{6,9}$/.test(String(d || '').replace(/\D/g, ''));
 
 function go(step, push = true) {
   const dir = step >= S.step ? 'in-r' : 'in-l';
@@ -231,11 +233,11 @@ function render() {
     const desde = hay.length ? Math.min(...hay.map(t => t.precio)) : 0;
     shell(`<main class="appear">${eventoCard(ev)}
       <h2 class="sec">Entradas</h2>
-      <div class="precios">${tipos().map(t => `<div class="row"><span>${esc(t.nombre)}${t.quedan === 0 ? '<span class="chip no">Agotadas</span>' : ''}${t.detalle ? `<small>${esc(t.detalle)}</small>` : ''}</span><span><b>${t.precio ? money(t.precio) : 'Sin cargo'}</b></span></div>`).join('')}</div>
+      <div class="precios">${tipos().map(t => `<div class="row"><span>${esc(t.nombre)}${t.quedan === 0 ? '<span class="chip no">Agotadas</span>' : ''}${t.detalle ? `<small>${esc(t.detalle)}</small>` : ''}</span><span><b>${t.precio ? money(t.precio) : 'Sin costo'}</b></span></div>`).join('')}</div>
       ${!ev.ventas_abiertas ? '<div class="aviso">La venta de entradas está cerrada.</div>'
         : agotado ? '<div class="aviso">Se agotaron las entradas.</div>'
         : ev.quedan != null && ev.quedan <= 30 ? `<div class="aviso">Quedan ${ev.quedan} entradas.</div>` : ''}
-      <p class="note">Cada asistente recibe su propia entrada con código QR, a su nombre.</p>
+      <p class="note">Recibís un solo código QR para todo tu grupo. En la puerta se controla el DNI de cada persona.</p>
       </main>`, abierto ? footer('Comprar entradas', true, false, 'Desde', desde) : '', true);
     if (abierto) $('next').onclick = () => {
       if (!cant()) { const t = hay[0]; S.qty[t.id] = 1; }
@@ -247,11 +249,11 @@ function render() {
       ${tipos().map(t => {
         const q = S.qty[t.id] || 0;
         const maxT = Math.min(tope() - n + q, t.quedan != null ? t.quedan : 20);
-        return `<div class="tipo"><div class="nm"><b>${esc(t.nombre)}</b>${t.detalle ? `<small>${esc(t.detalle)}</small>` : ''}<div class="p">${t.precio ? money(t.precio) : 'Sin cargo'}</div></div>
+        return `<div class="tipo"><div class="nm"><b>${esc(t.nombre)}</b>${t.detalle ? `<small>${esc(t.detalle)}</small>` : ''}<div class="p">${t.precio ? money(t.precio) : 'Sin costo'}</div></div>
           ${t.quedan === 0 && !q ? '<span class="chip no">Agotadas</span>' : `<div class="ctr"><button data-m="${t.id}" aria-label="Restar ${esc(t.nombre)}" ${q ? '' : 'disabled'}>−</button><output>${q}</output><button data-p="${t.id}" aria-label="Sumar ${esc(t.nombre)}" ${q < maxT ? '' : 'disabled'}>+</button></div>`}</div>`;
       }).join('')}
       ${n ? `<div class="cart"><h2>Tu pedido</h2>${tipos().filter(t => S.qty[t.id]).map(t => `<div class="row"><span>${S.qty[t.id]} × ${esc(t.nombre)}</span><span>${money(S.qty[t.id] * t.precio)}</span></div>`).join('')}</div>` : ''}
-      <p class="note">Después vas a poner el nombre de cada persona: cada una tiene su entrada.</p>
+      <p class="note">Después vas a poner el nombre y el DNI de cada persona.</p>
       </main>`, footer('Continuar', n > 0, true));
     cur().querySelectorAll('[data-m]').forEach(b => b.onclick = () => { S.qty[b.dataset.m] = Math.max(0, (S.qty[b.dataset.m] || 0) - 1); render(); });
     cur().querySelectorAll('[data-p]').forEach(b => b.onclick = () => { S.qty[b.dataset.p] = (S.qty[b.dataset.p] || 0) + 1; render(); });
@@ -267,8 +269,8 @@ function render() {
       <h2 class="sec">${as.length > 1 ? 'Quiénes van' : 'Quién va'}</h2>
       ${as.map((a, i) => `<div class="asis"><div class="h">Entrada ${i + 1}<span>${esc(a.tipo.nombre)}</span></div>
         <div class="two"><div class="fld"><label for="an${i}">Nombre y apellido</label><input id="an${i}" data-k="${a.k}" data-f="nombre" value="${esc(a.nombre)}"></div>
-        <div class="fld"><label for="ad${i}">DNI</label><input id="ad${i}" data-k="${a.k}" data-f="dni" inputmode="numeric" value="${esc(a.dni)}"></div></div></div>`).join('')}
-      <p class="note">El nombre sale en la entrada y se controla en la puerta.</p>
+        <div class="fld"><label for="ad${i}">DNI</label><input id="ad${i}" data-k="${a.k}" data-f="dni" inputmode="numeric" placeholder="Sin puntos" value="${esc(a.dni)}"></div></div></div>`).join('')}
+      <p class="note">El DNI de cada persona se controla en la puerta.</p>
       </main>`, footer('Ir a pagar', datosOk()));
     const next = $('next');
     const first = as[0] && as[0].k;
@@ -293,10 +295,10 @@ function render() {
         ${ev.cbu ? `<div class="ln"><span>CBU/CVU</span><code>${esc(ev.cbu)}</code><button class="copy" data-cp="${esc(ev.cbu)}">Copiar</button></div>` : ''}
         ${ev.titular ? `<div class="ln"><span>Titular</span><code>${esc(ev.titular)}</code></div>` : ''}</div>`}
       ${gratis ? `<div class="cart"><h2>Tu pedido</h2>${asistentes().map(a => `<div class="row"><span>${esc(a.nombre)}</span><span>${esc(a.tipo.nombre)}</span></div>`).join('')}</div>
-      <p class="note">Estas entradas son sin cargo. Cuando el club confirme el pedido, te mandamos por WhatsApp el link de cada una con su código QR.</p>`
+      <p class="note">Estas entradas son sin costo. Cuando el club confirme la compra, te mandamos por WhatsApp el link con el código QR.</p>`
       : `<label class="drop ${S.file ? 'ok' : ''}">${S.file ? `<b>✓ ${esc(S.file.name)}</b><small>Tocá para cambiar el archivo</small>` : `<b>Subí tu comprobante</b><small>Foto o PDF de la transferencia</small>`}
         <input type="file" id="file" accept="image/*,application/pdf"></label>
-      <p class="note">Transferí el monto exacto. Verificamos cada pago y te mandamos por WhatsApp el link de cada entrada con su código QR.</p>`}
+      <p class="note">Transferí el monto exacto. Verificamos cada pago y te mandamos por WhatsApp el link con el código QR de tu compra.</p>`}
       <input class="hp" id="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
       ${S.sendErr ? `<div class="err">${esc(S.sendErr)}</div>` : ''}</main>`,
       footer(S.sending ? 'Enviando…' : 'Enviar pedido', (gratis || !!S.file) && !S.sending));
@@ -312,14 +314,14 @@ function render() {
     $('next').onclick = enviar;
   } else {
     const ev = S.ev;
-    const msg = `Hola! Hice el pedido N° ${S.num} de entradas para ${ev.titulo} a nombre de ${S.nombre.trim()}, total ${money(S.total)}.`;
+    const msg = `Hola! Hice la compra ${S.codigo} de entradas para ${ev.titulo} a nombre de ${S.nombre.trim()}, total ${money(S.total)}.`;
     shell(`<main><div class="done">
       <div class="tick"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
-      <h1>Pedido enviado</h1>
-      <div class="order"><span class="muted" style="font-size:.85rem">Tu número de pedido</span><span class="id">N° ${S.num}</span><span class="status"><i></i>Pago en revisión</span>
+      <h1>Compra enviada</h1>
+      <div class="order"><span class="muted" style="font-size:.85rem">Tu número de compra</span><span class="id">${esc(S.codigo)}</span><span class="status"><i></i>Pago en revisión</span>
         <div class="cartrows">${S.enviadas.map(a => `<div class="row"><span>${esc(a.nombre)} · ${esc(a.tipo)}</span><span>${money(a.precio)}</span></div>`).join('')}
         <div class="row"><b>Total</b><b>${money(S.total)}</b></div></div></div>
-      <p class="muted">Cuando el club confirme la transferencia, te mandamos por WhatsApp el link de cada entrada con su código QR. Cada persona muestra el suyo en la puerta.</p>
+      <p class="muted">Cuando el club confirme la transferencia, te mandamos por WhatsApp el link con el código QR. Es uno solo para todo el grupo: en la puerta lo escanean y controlan el DNI de cada persona.</p>
       ${ev.whatsapp ? `<a class="wa" href="https://wa.me/${ev.whatsapp}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Escribir al organizador</a>` : ''}
       </div></main>`);
   }
@@ -355,7 +357,7 @@ async function enviar() {
       hp: $('hp').value, nombre: S.nombre, dni: S.dni, tel: S.tel, email: S.email, vinculo: S.vinculo,
       entradas: as.map(a => ({ tipo_id: a.tipo.id, nombre: a.nombre, dni: a.dni })), file,
     } }, 60000);
-    S.num = r.num; S.total = r.total;
+    S.num = r.num; S.codigo = r.codigo; S.total = r.total;
     S.enviadas = as.map(a => ({ nombre: a.nombre.trim(), tipo: a.tipo.nombre, precio: a.tipo.precio }));
     S.sending = false; go(4);
   } catch (e) {

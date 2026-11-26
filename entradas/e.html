@@ -63,6 +63,17 @@ details[open] summary:before{transform:rotate(90deg)}
 .door button:disabled{opacity:.5}
 .res{border-radius:10px;padding:12px 14px;font-weight:600;color:#fff}
 .res.ok{background:#15803d}.res.no{background:#b91c1c}.res.ya{background:#b45309}
+.asis{display:grid;gap:8px;margin-top:8px}
+.pa{display:flex;align-items:center;gap:10px;background:var(--panel);border-left:3px solid var(--blue);border-radius:10px;padding:10px 14px}
+.pa div{flex:1;min-width:0}
+.pa b{display:block;font-family:var(--display);font-weight:400;font-size:1.55rem;line-height:1.05;letter-spacing:.01em;overflow-wrap:anywhere}
+.pa span{color:var(--blue2);font-size:.9rem}
+.pa em,.dp em{font-style:normal;color:#4ade80;font-weight:600;font-size:.9rem;white-space:nowrap}
+.pa.in{border-left-color:#16a34a}
+.dlist{display:grid;gap:8px}
+.dp{display:flex;align-items:center;gap:10px;background:var(--panel);border-radius:10px;padding:10px 12px;color:#fff}
+.dp div{flex:1;min-width:0}.dp b{display:block}.dp span{color:var(--dim);font-size:.88rem}
+.dp button{padding:9px 14px}
 .msg{background:#fff;color:#16191f;border-radius:20px;padding:32px 24px;text-align:center;display:grid;gap:12px;justify-items:center}
 .msg img{width:84px;height:84px;object-fit:contain}
 .msg h2{margin:0;font-size:1.35rem}
@@ -71,7 +82,7 @@ details[open] summary:before{transform:rotate(90deg)}
 .spin{width:26px;height:26px;border-radius:50%;border:3px solid #e1e2e6;border-top-color:#001392;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .tip{color:#6b7280;text-align:center;font-size:.82rem;margin:14px 0 0;line-height:1.4}
-@media (max-width:370px){h1{font-size:3rem}.name{font-size:1.9rem}.facts b{font-size:1.25rem}}
+@media (max-width:370px){h1{font-size:3rem}.pa b{font-size:1.35rem}.facts b{font-size:1.25rem}}
 </style>
 </head>
 <body>
@@ -96,9 +107,12 @@ function mensaje(titulo, texto, wa) {
     ${wa ? `<a href="https://wa.me/${wa}" target="_blank" rel="noopener">Escribir al organizador</a>` : ''}</div>`;
 }
 
+const dniFmt = d => String(d || '').replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
 function render(e) {
   document.title = `${e.codigo} · ${e.titulo}`;
-  const con = e.viene_con.map(o => `<div>${esc(o.nombre)}${o.tipo !== 'Adulto' ? ` (${esc(o.tipo.toLowerCase())})` : ''}</div>`).join('');
+  const as = e.asistentes;
+  const dentro = as.filter(a => a.ingreso_at).length;
   app.innerHTML = `<article class="t">
     <div class="bar"><i></i><i></i><i></i></div>
     <div class="top">
@@ -106,8 +120,9 @@ function render(e) {
       <h1>${esc(e.titulo).toUpperCase()}</h1>
       ${e.bajada ? `<span class="baj">${esc(e.bajada).toUpperCase()}</span>` : ''}
       <hr>
-      <div><div class="lbl">Asistente</div><div class="name">${esc(e.nombre).toUpperCase()}</div><div class="tipo">${esc(e.tipo)}</div></div>
-      ${con ? `<div class="con"><span class="lbl">Viene con</span>${con}</div>` : ''}
+      <div><div class="lbl">${as.length > 1 ? `Asistentes · ${as.length} personas` : 'Asistente'}</div>
+        <div class="asis">${as.map(a => `<div class="pa${a.ingreso_at ? ' in' : ''}"><div><b>${esc(a.nombre).toUpperCase()}</b>
+          <span>${esc(a.tipo)} · DNI ${esc(dniFmt(a.dni)) || '—'}</span></div>${a.ingreso_at ? `<em>✓ ${hora(a.ingreso_at)}</em>` : ''}</div>`).join('')}</div></div>
       <div class="facts">
         <div><span class="lbl">Fecha</span><b>${esc(e.fecha).toUpperCase()}</b></div><div><span class="lbl">Horario</span><b>${esc(e.hora).toUpperCase()}</b></div>
         <div><span class="lbl">Lugar</span><b>${esc(e.lugar).toUpperCase()}</b></div><div><span class="lbl">Vestimenta</span><b>${esc(e.vestimenta).toUpperCase()}</b></div>
@@ -115,46 +130,60 @@ function render(e) {
     </div>
     <div class="cut" aria-hidden="true"><i></i><i></i></div>
     <div class="bot">
-      <div class="qr">${qrSvg(location.origin + location.pathname + '?t=' + token)}
-        <span class="lbl">Entrada N°</span><span class="code">${esc(e.codigo)}</span><small>Personal e intransferible</small>
-        ${e.ingreso_at ? `<div class="sello"><span>INGRESÓ<small>${hora(e.ingreso_at)} hs</small></span></div>` : ''}</div>
+      <div class="qr">${qrSvg(location.origin + location.pathname + '?t=' + e.token)}
+        <span class="lbl">Entrada N°</span><span class="code">${esc(e.codigo)}</span>
+        <small>${as.length > 1 ? `Válida para ${as.length} personas · presentar DNI` : 'Personal · presentar DNI'}</small>
+        ${dentro === as.length ? `<div class="sello"><span>${as.length > 1 ? 'INGRESARON' : 'INGRESÓ'}<small>${hora(as[as.length - 1].ingreso_at)} hs</small></span></div>` : ''}</div>
       <details id="door"><summary>Control de puerta</summary>
-        <div class="door"><input id="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN de puerta" value="${esc(guardado('pin') || '')}">
-        <button id="marcar">Marcar ingreso</button><div id="res"></div></div></details>
+        <div class="door" id="door-in"><input id="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN de puerta" value="${esc(guardado('pin') || '')}">
+        <button id="abrir">Controlar esta entrada</button><div id="res"></div></div></details>
     </div></article>
-    <p class="tip">Guardá este link o sacale captura de pantalla. En la puerta mostrá el código QR.</p>`;
-  document.getElementById('marcar').onclick = marcar;
+    <p class="tip">Guardá este link o sacale captura de pantalla. En la puerta mostrá el código QR y el DNI de cada persona.</p>`;
+  document.getElementById('abrir').onclick = () => puerta();
 }
 
-async function marcar() {
-  const btn = document.getElementById('marcar'), out = document.getElementById('res');
-  const pin = document.getElementById('pin').value.trim();
-  btn.disabled = true; out.innerHTML = '';
+// Control de puerta desde la misma entrada: lista de personas y quién entra.
+async function puerta(ids) {
+  const box = document.getElementById('door-in'), out = document.getElementById('res');
+  const pin = (document.getElementById('pin') || {}).value?.trim() || guardado('pin') || '';
+  out.innerHTML = '';
   try {
-    const r = await rpc('ent_ingreso', { p_pin: pin, p_codigo: token });
+    let r = await rpc('ent_ingreso', { p_pin: pin, p_codigo: token });
     guardado('pin', pin);
-    if (r.resultado === 'ok') {
-      await cargar(true);
-      document.getElementById('res').innerHTML = `<div class="res ok">✓ Ingreso registrado: ${esc(r.nombre)}</div>`;
-      return;
+    if (r.resultado !== 'ok') { out.innerHTML = `<div class="res no">${esc(r.mensaje)}</div>`; return; }
+    if (ids !== undefined) {
+      const m = await rpc('ent_marcar', { p_pin: pin, p_pedido: r.pedido_id, p_entradas: ids });
+      r.asistentes = m.asistentes;
     }
-    const txt = r.resultado === 'ya_ingreso' ? `Ya ingresó a las ${hora(r.ingreso_at)}` : r.mensaje;
-    out.innerHTML = `<div class="res ${r.resultado === 'ya_ingreso' ? 'ya' : 'no'}">${esc(txt)}</div>`;
+    const falta = r.asistentes.filter(a => !a.ingreso_at);
+    box.innerHTML = `<div class="dlist">${r.asistentes.map(a => `<div class="dp"><div><b>${esc(a.nombre)}</b><span>DNI ${esc(dniFmt(a.dni)) || '—'} · ${esc(a.tipo)}</span></div>
+        ${a.ingreso_at ? `<em>✓ ${hora(a.ingreso_at)}</em>` : `<button data-id="${a.id}">Entra</button>`}</div>`).join('')}</div>
+      ${falta.length > 1 ? `<button id="todos">✓ Entran todos (${falta.length})</button>` : ''}
+      ${!falta.length ? '<div class="res ya">Ya ingresaron todos.</div>' : ''}`;
+    box.querySelectorAll('[data-id]').forEach(b => b.onclick = () => puerta([b.dataset.id]));
+    const t = document.getElementById('todos'); if (t) t.onclick = () => puerta(null);
+    if (ids !== undefined) refrescarSello(r.asistentes);
   } catch (e) {
     if (e.code === '28000') guardado('pin', null);
     out.innerHTML = `<div class="res no">${esc(e.message)}</div>`;
   }
-  btn.disabled = false;
 }
 
-async function cargar(abierto) {
+function refrescarSello(as) {
+  document.querySelectorAll('.asis .pa').forEach((el, i) => {
+    const a = as[i]; if (!a || !a.ingreso_at || el.classList.contains('in')) return;
+    el.classList.add('in'); el.insertAdjacentHTML('beforeend', `<em>✓ ${hora(a.ingreso_at)}</em>`);
+  });
+}
+
+async function cargar() {
   if (!/^[0-9a-f]{32}$/i.test(token)) return mensaje('Link incompleto', 'Revisá que hayas abierto el link completo que te mandaron por WhatsApp.');
   try {
     const e = await rpc('ent_entrada', { p_token: token });
-    if (e.estado === 'pendiente') return mensaje('Pago en revisión', `Tu entrada ${esc(e.codigo)} a nombre de <b>${esc(e.nombre)}</b> está reservada. Cuando el club confirme la transferencia, este link va a mostrar tu código QR.`, e.whatsapp);
-    if (e.estado === 'rechazado') return mensaje('Entrada no válida', 'El pago de este pedido no se pudo confirmar. Escribile al organizador.', e.whatsapp);
+    const nombres = e.asistentes.map(a => esc(a.nombre)).join(', ');
+    if (e.estado === 'pendiente') return mensaje('Pago en revisión', `Tu compra ${esc(e.codigo)} (${nombres}) está reservada. Cuando el club confirme la transferencia, este link va a mostrar el código QR.`, e.whatsapp);
+    if (e.estado === 'rechazado') return mensaje('Entrada no válida', 'El pago de esta compra no se pudo confirmar. Escribile al organizador.', e.whatsapp);
     render(e);
-    if (abierto) document.getElementById('door').open = true;
   } catch (err) {
     mensaje(err.offline ? 'Sin conexión' : 'No encontramos la entrada', esc(err.message));
   }

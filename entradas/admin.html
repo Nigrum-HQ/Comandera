@@ -195,13 +195,10 @@ function mensajeWA(p) {
   const s = S.d.settings;
   const ev = `${s.titulo.toUpperCase()} (${s.fecha}, ${s.hora}, ${s.lugar})`;
   const nombre = p.nombre.split(' ')[0];
-  if (p.entradas.length === 1) {
-    const e = p.entradas[0];
-    return `¡Hola ${nombre}! Esta es tu entrada personal para ${ev} (N° ${e.codigo}): ${linkEntrada(e.token)}\nMostrá el código QR en la entrada. ¡Te esperamos!`;
-  }
-  return `¡Hola ${nombre}! Estas son las entradas para ${ev}. Cada una es personal, con su código QR:\n\n`
-    + p.entradas.map(e => `• ${e.nombre} (${e.codigo}): ${linkEntrada(e.token)}`).join('\n')
-    + `\n\nCada persona muestra su QR en la entrada. ¡Los esperamos!`;
+  const quienes = p.entradas.length > 1
+    ? `\nVale para ${p.entradas.length} personas: ${p.entradas.map(e => e.nombre).join(', ')}.` : '';
+  return `¡Hola ${nombre}! Esta es tu entrada para ${ev} (N° ${p.codigo}): ${linkEntrada(p.token)}${quienes}\n`
+    + `Mostrá el código QR en la entrada${p.entradas.length > 1 ? ' y cada persona su DNI' : ' junto con tu DNI'}. ¡Te esperamos!`;
 }
 
 // ---------- vistas ----------
@@ -217,7 +214,7 @@ function renderPedidos() {
   const n = e => ps.filter(p => p.estado === e).length;
   const q = S.q.trim().toLowerCase();
   const lista = ps.filter(p => (S.filtro === 'todos' || p.estado === S.filtro)
-    && (!q || [p.nombre, p.tel, p.dni, 'n° ' + p.num, ...p.entradas.flatMap(e => [e.nombre, e.codigo, e.dni])].join(' ').toLowerCase().includes(q)));
+    && (!q || [p.nombre, p.tel, p.dni, p.codigo, 'n° ' + p.num, ...p.entradas.flatMap(e => [e.nombre, e.dni])].join(' ').toLowerCase().includes(q)));
   view.innerHTML = `
     <div class="row"><div class="chips grow">${[['pendiente', `Por verificar (${n('pendiente')})`], ['pagado', `Pagados (${n('pagado')})`], ['rechazado', `Rechazados (${n('rechazado')})`], ['todos', `Todos (${ps.length})`]]
       .map(([k, t]) => `<button data-f="${k}" aria-pressed="${S.filtro === k}">${t}</button>`).join('')}</div></div>
@@ -232,10 +229,10 @@ function renderPedidos() {
 
 function pedidoCard(p) {
   const wa = waNumero(p.tel);
-  const ents = p.entradas.map(e => `<div class="ent"><code>${esc(e.codigo)}</code><span class="n">${esc(e.nombre)} <small>· ${esc(e.tipo)}${e.dni ? ' · ' + esc(e.dni) : ''}</small></span>
+  const ents = p.entradas.map(e => `<div class="ent"><span class="n">${esc(e.nombre)} <small>· ${esc(e.tipo)} · DNI ${e.dni ? esc(e.dni) : '<b style="color:var(--err)">falta</b>'}</small></span>
       ${e.ingreso_at ? `<span class="pill in">Ingresó ${hora(e.ingreso_at)}</span>` : ''}
-      ${p.estado === 'pagado' ? `<a class="lnk" href="${esc(linkEntrada(e.token))}" target="_blank" rel="noopener">Ver</a>` : ''}
-      <button class="lnk" data-a="editar" data-id="${e.id}" aria-label="Corregir nombre">✏️</button></div>`).join('');
+      <button class="lnk" data-a="editar" data-id="${e.id}" aria-label="Corregir nombre o DNI">✏️</button></div>`).join('')
+    + (p.estado === 'pagado' ? `<a class="lnk" style="justify-self:start" href="${esc(linkEntrada(p.token))}" target="_blank" rel="noopener">Ver la entrada (QR) →</a>` : '');
   let acc = '';
   if (p.estado === 'pendiente') {
     acc = `${p.comprobante ? `<button class="btn sec sm" data-a="comprobante" data-id="${p.id}">🧾 Ver comprobante</button>` : '<span class="hint">Sin comprobante</span>'}
@@ -251,7 +248,7 @@ function pedidoCard(p) {
     acc = `${p.comprobante ? `<button class="btn sec sm" data-a="comprobante" data-id="${p.id}">🧾 Ver comprobante</button>` : ''}
       <span class="grow"></span><button class="lnk" data-a="pendiente" data-id="${p.id}">Volver a revisar</button>`;
   }
-  return `<div class="ped"><div class="h"><div class="nm"><b>N° ${p.num} · ${esc(p.nombre)}</b>
+  return `<div class="ped"><div class="h"><div class="nm"><b>${esc(p.codigo)} · ${esc(p.nombre)}</b>
       <small>${esc(p.tel || 'sin teléfono')}${p.vinculo ? ' · ' + esc(p.vinculo) : ''}${p.origen === 'manual' ? ' · cargado a mano' : ''} · ${fechaHora(p.created_at)}</small></div>
       <div style="text-align:right"><div class="tot">${money(p.total)}</div><span class="pill ${p.estado}"><i></i>${ESTADOS[p.estado]}</span></div></div>
     <div class="ents">${ents}</div>
@@ -263,11 +260,11 @@ async function accion(a, id, btn) {
   const p = S.d.pedidos.find(x => x.id === id);
   try {
     if (a === 'pagar' || a === 'rechazar' || a === 'pendiente') {
-      if (a === 'rechazar' && !confirm(`¿Rechazar el pedido N° ${p.num} de ${p.nombre}? Sus entradas dejan de valer y se libera el lugar.`)) return;
+      if (a === 'rechazar' && !confirm(`¿Rechazar la compra ${p.codigo} de ${p.nombre}? Sus entradas dejan de valer y se libera el lugar.`)) return;
       btn.disabled = true;
       await api('ent_admin_estado', { p_pedido: id, p_estado: a === 'pagar' ? 'pagado' : a === 'rechazar' ? 'rechazado' : 'pendiente' });
       await cargar();
-      if (a === 'pagar') { toast(`N° ${p.num} pagado. Mandale las entradas por WhatsApp.`); S.filtro = 'pagado'; S.q = String(p.nombre); }
+      if (a === 'pagar') { toast(`${p.codigo} pagada. Mandale la entrada por WhatsApp.`); S.filtro = 'pagado'; S.q = String(p.nombre); }
       renderPedidos();
     } else if (a === 'wa') {
       api('ent_admin_enviado', { p_pedido: id }).then(cargar).then(render).catch(() => {}); // el link se abre igual
@@ -283,8 +280,8 @@ async function accion(a, id, btn) {
       await api('ent_admin_nota', { p_pedido: id, p_nota: t }); await cargar(); renderPedidos();
     } else if (a === 'editar') {
       const e = S.d.pedidos.flatMap(x => x.entradas).find(x => x.id === id);
-      const nombre = prompt(`Nombre y apellido (${e.codigo}):`, e.nombre); if (nombre === null) return;
-      const dni = prompt('DNI (opcional):', e.dni || ''); if (dni === null) return;
+      const nombre = prompt('Nombre y apellido:', e.nombre); if (nombre === null) return;
+      const dni = prompt('DNI:', e.dni || ''); if (dni === null) return;
       await api('ent_admin_entrada', { p_entrada: id, p_nombre: nombre, p_dni: dni }); await cargar(); renderPedidos();
       toast('Listo. El link y el QR siguen siendo los mismos.');
     }
@@ -300,7 +297,7 @@ function cerrar() {
 el('modal').onclick = e => { if (e.target === el('modal') || e.target.closest('.x')) cerrar(); };
 
 async function verComprobante(p) {
-  abrir(`<div class="sh"><b>Comprobante · N° ${p.num}</b><button class="x" aria-label="Cerrar">✕</button></div><div class="comp">Cargando…</div>`);
+  abrir(`<div class="sh"><b>Comprobante · ${esc(p.codigo)}</b><button class="x" aria-label="Cerrar">✕</button></div><div class="comp">Cargando…</div>`);
   try {
     const c = await api('ent_admin_comprobante', { p_pedido: p.id });
     const bin = atob(c.data); const u8 = new Uint8Array(bin.length);
@@ -314,7 +311,7 @@ async function verComprobante(p) {
 function cargarVenta() {
   const tipos = S.d.tipos;
   if (!tipos.length) { toast('Primero cargá un tipo de entrada en Ajustes.'); return; }
-  const fila = () => `<div class="two fila" style="grid-template-columns:1.5fr 1fr auto"><input placeholder="Nombre y apellido" class="fn" style="border:1px solid var(--line);border-radius:10px;padding:11px 12px">
+  const fila = () => `<div class="two fila" style="grid-template-columns:1.4fr .9fr 1fr auto"><input placeholder="Nombre y apellido" class="fn" style="border:1px solid var(--line);border-radius:10px;padding:11px 12px;min-width:0"><input placeholder="DNI" inputmode="numeric" class="fd" style="border:1px solid var(--line);border-radius:10px;padding:11px 8px;min-width:0">
     <select class="ft" style="border:1px solid var(--line);border-radius:10px;padding:11px 8px;background:#fff">${tipos.map(t => `<option value="${t.id}">${esc(t.nombre)} · ${money(t.precio)}</option>`).join('')}</select>
     <button class="x quitar" type="button" aria-label="Quitar">✕</button></div>`;
   abrir(`<div class="sh"><b>Cargar venta</b><button class="x" aria-label="Cerrar">✕</button></div>
@@ -337,10 +334,10 @@ function cargarVenta() {
     try {
       const r = await api('ent_admin_cargar', { p: {
         nombre: el('vn').value, tel: el('vt').value, nota: el('vnota').value,
-        entradas: [...filas.querySelectorAll('.fila')].map(f => ({ nombre: f.querySelector('.fn').value, tipo_id: f.querySelector('.ft').value })),
+        entradas: [...filas.querySelectorAll('.fila')].map(f => ({ nombre: f.querySelector('.fn').value, dni: f.querySelector('.fd').value, tipo_id: f.querySelector('.ft').value })),
       } });
       cerrar(); await cargar(); S.filtro = 'pagado'; S.q = ''; renderPedidos();
-      toast(`Pedido N° ${r.num} cargado. Mandale las entradas por WhatsApp.`);
+      toast(`Compra ${r.codigo} cargada. Mandale la entrada por WhatsApp.`);
     } catch (e) { el('verr').innerHTML = `<div class="err">${esc(e.message)}</div>`; b.disabled = false; }
   };
 }
@@ -368,9 +365,9 @@ function renderResumen() {
 
 function bajarCSV() {
   const cel = v => { let s = String(v ?? ''); if (/^[=+\-@]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };
-  const filas = [['Entrada', 'Asistente', 'DNI', 'Tipo', 'Precio', 'Pedido', 'Compró', 'WhatsApp', 'Vínculo', 'Estado', 'Ingresó', 'Link']];
-  S.d.pedidos.slice().reverse().forEach(p => p.entradas.forEach(e => filas.push([e.codigo, e.nombre, e.dni, e.tipo, e.precio, p.num, p.nombre, p.tel, p.vinculo,
-    ESTADOS[p.estado], e.ingreso_at ? fechaHora(e.ingreso_at) : '', p.estado === 'pagado' ? linkEntrada(e.token) : ''])));
+  const filas = [['Compra', 'Asistente', 'DNI', 'Tipo', 'Precio', 'Compró', 'WhatsApp', 'Vínculo', 'Estado', 'QR enviado', 'Ingresó', 'Link']];
+  S.d.pedidos.slice().reverse().forEach(p => p.entradas.forEach(e => filas.push([p.codigo, e.nombre, e.dni, e.tipo, e.precio, p.nombre, p.tel, p.vinculo,
+    ESTADOS[p.estado], p.enviado_at ? fechaHora(p.enviado_at) : '', e.ingreso_at ? fechaHora(e.ingreso_at) : '', p.estado === 'pagado' ? linkEntrada(p.token) : ''])));
   const csv = '﻿' + filas.map(f => f.map(cel).join(';')).join('\r\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));

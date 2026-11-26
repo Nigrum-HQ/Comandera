@@ -40,6 +40,20 @@ button,input{font:inherit;color:inherit}
 .res p{margin:0;font-size:1.2rem;opacity:.95}
 .res code{font-size:1.1rem;opacity:.85}
 .res small{opacity:.85;margin-top:16px}
+.res.grupo{place-content:start stretch;justify-items:stretch;text-align:left;overflow:auto;padding:calc(env(safe-area-inset-top,0px) + 20px) 16px calc(env(safe-area-inset-bottom,0px) + 20px);gap:12px}
+.res.grupo.ok{background:#0f3d22}.res.grupo.ya{background:#4a2a06}
+.gh b{display:block;font-size:1.6rem}.gh span{opacity:.85}
+.gp{margin:0;font-size:1rem;opacity:.9}
+.gl{display:grid;gap:8px}
+.gi{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.3);border-radius:12px;padding:12px}
+.gi div{flex:1;min-width:0}.gi b{display:block;font-size:1.2rem}.gi span{font-size:1rem;opacity:.9}
+.gi strong{font-size:1.25rem;letter-spacing:.02em}
+.gi em{font-style:normal;color:#86efac;font-weight:600;white-space:nowrap}
+.gi.in{opacity:.6}
+.gi .btn{background:#16a34a;padding:11px 16px}
+.ga{display:grid;gap:8px;margin-top:6px}
+.btn.big{background:#16a34a;font-size:1.15rem;padding:16px}
+.btn:disabled{opacity:.5}
 .ult{display:grid;gap:6px}
 .ult div{display:flex;gap:8px;font-size:.9rem;color:#d1d5db;background:#16171b;border-radius:10px;padding:8px 10px}
 .ult code{color:#93c5fd}
@@ -133,33 +147,62 @@ async function leer() {
 el('cam').onclick = camara;
 
 // ---------- validar ----------
+const dniFmt = d => String(d || '').replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 async function validar(codigo) {
   if (S.busy || !codigo.trim()) return;
   S.busy = true;
   let r;
   try { r = await rpc('ent_ingreso', { p_pin: S.pin, p_codigo: codigo.trim() }); }
   catch (e) {
-    S.busy = false;
-    if (e.code === '28000') { salir(); el('login-err').innerHTML = `<div class="err">${esc(e.message)}</div>`; return; }
-    return mostrar('no', '⚠️', 'Sin conexión', e.message);
+    if (e.code === '28000') { S.busy = false; salir(); el('login-err').innerHTML = `<div class="err">${esc(e.message)}</div>`; return; }
+    return aviso('no', '⚠️', 'Sin conexión', e.message);
   }
-  if (r.resultado === 'ok') {
-    S.ult.unshift(r); S.ult = S.ult.slice(0, 5); pintarUlt(); contar();
-    mostrar('ok', '✓', r.nombre, r.tipo, r.codigo);
-  } else if (r.resultado === 'ya_ingreso') {
-    mostrar('ya', '⚠️', 'YA INGRESÓ', `${r.nombre} entró a las ${hora(r.ingreso_at)}`, r.codigo);
-  } else {
-    mostrar('no', '✕', r.resultado === 'no_pagada' ? 'NO PAGADA' : 'NO VÁLIDA', r.nombre ? `${r.nombre} · ${r.mensaje}` : r.mensaje, r.codigo);
-  }
+  if (r.resultado === 'no_existe') return aviso('no', '✕', 'NO VÁLIDA', r.mensaje);
+  if (r.resultado === 'no_pagada') return aviso('no', '✕', 'NO PAGADA', `${r.codigo} · ${r.comprador}. ${r.mensaje}`);
+  grupo(r);
 }
-function mostrar(tipo, ic, titulo, texto, codigo) {
+
+// Aviso a pantalla completa (error o "ya ingresaron").
+function aviso(tipo, ic, titulo, texto) {
   const x = el('res');
   x.className = 'res ' + tipo;
-  x.innerHTML = `<div class="ic">${ic}</div><h2>${esc(titulo)}</h2><p>${esc(texto || '')}</p>${codigo ? `<code>${esc(codigo)}</code>` : ''}<small>Tocá para seguir</small>`;
-  if (navigator.vibrate) navigator.vibrate(tipo === 'ok' ? 120 : [200, 100, 200]);
+  x.innerHTML = `<div class="ic">${ic}</div><h2>${esc(titulo)}</h2><p>${esc(texto || '')}</p><small>Tocá para seguir</small>`;
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
   const fin = () => { x.classList.add('hidden'); S.busy = false; clearTimeout(t); };
-  const t = setTimeout(fin, tipo === 'ok' ? 2200 : 5000);
+  const t = setTimeout(fin, 5000);
   x.onclick = fin;
+}
+
+// La compra escaneada: lista de personas con su DNI para controlar, y quién entra.
+function grupo(r) {
+  const x = el('res');
+  const falta = r.asistentes.filter(a => !a.ingreso_at);
+  const tipo = falta.length ? 'ok' : 'ya';
+  x.className = 'res grupo ' + tipo;
+  x.onclick = null;
+  x.innerHTML = `<div class="gh"><b>${falta.length ? '✓ ENTRADA VÁLIDA' : '⚠️ YA INGRESARON TODOS'}</b><span>${esc(r.codigo)} · compró ${esc(r.comprador)}</span></div>
+    <p class="gp">${falta.length ? 'Controlá el DNI de cada persona:' : 'Esta entrada ya se usó completa.'}</p>
+    <div class="gl">${r.asistentes.map(a => `<div class="gi${a.ingreso_at ? ' in' : ''}"><div><b>${esc(a.nombre)}</b><span>DNI <strong>${esc(dniFmt(a.dni)) || '—'}</strong> · ${esc(a.tipo)}</span></div>
+      ${a.ingreso_at ? `<em>Entró ${hora(a.ingreso_at)}</em>` : `<button class="btn" data-id="${a.id}">Entra</button>`}</div>`).join('')}</div>
+    <div class="ga">${falta.length > 1 ? `<button class="btn big" id="g-todos">✓ Entran todos (${falta.length})</button>` : ''}
+      <button class="btn sec" id="g-cerrar">${falta.length ? 'Cancelar' : 'Seguir escaneando'}</button></div>`;
+  if (navigator.vibrate) navigator.vibrate(falta.length ? 120 : [200, 100, 200]);
+  const marcar = async ids => {
+    x.querySelectorAll('button').forEach(b => b.disabled = true);
+    try {
+      const m = await rpc('ent_marcar', { p_pin: S.pin, p_pedido: r.pedido_id, p_entradas: ids });
+      m.asistentes.filter(a => a.ingreso_at && !r.asistentes.find(o => o.id === a.id && o.ingreso_at))
+        .forEach(a => { S.ult.unshift({ codigo: r.codigo, nombre: a.nombre, tipo: a.tipo, ingreso_at: a.ingreso_at }); });
+      S.ult = S.ult.slice(0, 6); pintarUlt(); contar();
+      r.asistentes = m.asistentes;
+      if (r.asistentes.every(a => a.ingreso_at)) { cerrar(); return; }
+      grupo(r);
+    } catch (e) { alert(e.message); x.querySelectorAll('button').forEach(b => b.disabled = false); }
+  };
+  const cerrar = () => { x.classList.add('hidden'); S.busy = false; };
+  x.querySelectorAll('[data-id]').forEach(b => b.onclick = () => marcar([b.dataset.id]));
+  const t = el('g-todos'); if (t) t.onclick = () => marcar(null);
+  el('g-cerrar').onclick = cerrar;
 }
 function pintarUlt() {
   el('ult').innerHTML = S.ult.map(r => `<div><code>${esc(r.codigo)}</code><span class="n">${esc(r.nombre)} · ${esc(r.tipo)}</span><span>${hora(r.ingreso_at)}</span></div>`).join('');
