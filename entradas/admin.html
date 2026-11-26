@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<script>/* Base de la carpeta (sirve en /entradas, /entradas/… o /Comandera/entradas/…) */document.write('<base href="' + location.pathname.replace(/(\/entradas)(\/[^/]*)?$/, '$1/') + '">')</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Panel de entradas · SMRHC</title>
 <meta name="theme-color" content="#ffffff">
@@ -377,7 +378,7 @@ function bajarCSV() {
 
 function renderAjustes() {
   const s = S.d.settings;
-  const publico = new URL('./', location.href).href;
+  const publico = new URL('./', document.baseURI).href.replace(/\/$/, '');
   const f = (k, l, extra = '') => `<div class="fld"><label for="s-${k}">${l}</label><input id="s-${k}" value="${esc(s[k] ?? '')}" ${extra}></div>`;
   view.innerHTML = `
     <h2>Link para vender</h2>

@@ -39,7 +39,7 @@ const hora = iso => new Date(iso).toLocaleTimeString('es-AR', { ...TZ, hour: '2-
 const fechaHora = iso => new Date(iso).toLocaleString('es-AR', { ...TZ, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
 // Link personal de cada entrada (el mismo que va dentro del QR).
-const linkEntrada = token => new URL('e.html?t=' + token, location.href).href;
+const linkEntrada = token => new URL('e.html?t=' + token, document.baseURI).href;
 
 // Teléfono argentino → número para wa.me (549 + área + número, sin 0 ni 15).
 function waNumero(tel) {
