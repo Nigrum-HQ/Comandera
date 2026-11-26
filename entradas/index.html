@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Entradas SMRHC</title>
+<meta name="description" content="Comprá tu entrada para la Cena de Fin de Año de San Miguel Rugby & Hockey Club.">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#001392; --ink:#16191f; --muted:#6b7280; --line:#d9dbe1; --bg:#f2f2f7; --card:#fff;
+  --ok:#25c45d; --okbg:#eaf7ee; --okfg:#1e7a3c; --err:#c0392b; --blue:#1d4ed8;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,system-ui,sans-serif;
+  --display:"Bebas Neue","Arial Narrow",Impact,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:#fff;color:var(--ink);font-family:var(--font);-webkit-text-size-adjust:100%}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible,select:focus-visible,label:focus-within{outline:2px solid var(--navy);outline-offset:2px}
+.app{max-width:520px;margin:0 auto;position:relative;overflow-x:clip;min-height:100dvh}
+
+/* Pantallas + transición "Move in" (300 ms, ease-out) */
+.screen{min-height:100dvh;display:flex;flex-direction:column;background:var(--bg);position:relative;z-index:1}
+.screen.white{background:#fff}
+.screen.leaving{position:fixed;left:0;right:0;max-width:520px;margin:0 auto;z-index:0;pointer-events:none}
+.in-r{animation:inR .3s cubic-bezier(0,0,.2,1)}
+.in-l{animation:inL .3s cubic-bezier(0,0,.2,1)}
+@keyframes inR{from{transform:translateX(100%)}to{transform:none}}
+@keyframes inL{from{transform:translateX(-100%)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){.in-r,.in-l{animation:none}}
+
+/* Header */
+.top{position:sticky;top:0;z-index:5;background:#fff;padding-top:env(safe-area-inset-top,0px)}
+.hd{display:flex;align-items:center;gap:12px;padding:14px 22px 12px;width:100%;border:0;background:none;text-align:left}
+.hd img{width:36px;height:36px;object-fit:contain}
+.hd b{display:block;font-size:1.25rem;font-weight:600;letter-spacing:-.01em}
+.hd small{display:block;color:var(--muted);font-size:.8rem}
+.prog{display:flex;gap:4px;padding:0 20px 12px}
+.prog i{flex:1;height:4px;border-radius:2px;background:#e1e2e6}
+.prog i.on{background:var(--navy)}
+
+main{flex:1;padding:18px 24px 24px;display:grid;gap:14px;align-content:start}
+h1{margin:0;font-size:1.6rem;font-weight:700;letter-spacing:-.01em;line-height:1.2}
+h2.sec{margin:8px 0 0;font-size:.72rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.err{background:#fdecea;color:var(--err);border-radius:10px;padding:10px 12px;font-size:.88rem}
+.aviso{background:#fff4d6;color:#7a5a00;border-radius:10px;padding:10px 12px;font-size:.88rem}
+
+/* Carga */
+.splash{min-height:100dvh;display:grid;place-content:center;justify-items:center;gap:14px;background:#fff;text-align:center;padding:24px}
+.splash img{width:112px;height:112px;object-fit:contain;animation:pulse 1.6s ease-in-out infinite}
+.splash b{font-size:1.35rem;font-weight:600}
+.splash small{color:var(--muted);font-size:.86rem}
+.spin{width:26px;height:26px;border-radius:50%;border:3px solid #e1e2e6;border-top-color:var(--navy);animation:spin .8s linear infinite;margin-top:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{50%{transform:scale(.94)}}
+.appear{animation:appear .35s ease-out}
+@keyframes appear{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.splash img,.spin,.appear{animation:none}}
+
+/* Evento (tarjeta oscura, misma estética que la entrada) */
+.ev{background:#0b0b0d;color:#fff;border-radius:22px;overflow:hidden;position:relative}
+.ev .bar{display:flex;height:6px}.ev .bar i{flex:1}.ev .bar i:nth-child(1){background:var(--blue)}.ev .bar i:nth-child(2){background:#0b0b0d}.ev .bar i:nth-child(3){background:#9ca3af}
+.ev .in{padding:22px 22px 24px;display:grid;gap:16px}
+.ev .club{display:flex;align-items:center;gap:14px}
+.ev .club img{width:62px;height:62px;object-fit:contain}
+.ev .club span{border-left:3px solid var(--blue);padding-left:12px;font-family:var(--display);font-size:1.15rem;letter-spacing:.12em;line-height:1.15}
+.ev .tit{text-wrap:balance;font-family:var(--display);font-size:3.3rem;line-height:.92;margin:4px 0 0;font-weight:400;letter-spacing:.01em}
+.ev .baj{justify-self:start;background:var(--blue);font-family:var(--display);letter-spacing:.14em;font-size:1.05rem;padding:5px 12px 3px}
+.facts{display:grid;grid-template-columns:1fr 1fr;border:1px solid #2a2b31;border-radius:12px;overflow:hidden}
+.facts div{padding:11px 8px 9px;text-align:center;border-color:#2a2b31;border-style:solid;border-width:0}
+.facts div:nth-child(odd){border-right-width:1px}.facts div:nth-child(-n+2){border-bottom-width:1px}
+.facts small{display:block;color:#9ca3af;font-size:.62rem;letter-spacing:.28em;text-transform:uppercase}
+.facts b{display:block;font-family:var(--display);font-weight:400;font-size:1.35rem;letter-spacing:.02em;margin-top:2px}
+.precios{background:var(--card);border-radius:16px;padding:6px 16px;display:grid}
+.precios .row{padding:11px 0;border-bottom:1px solid #eceef2}
+.precios .row:last-child{border:0}
+.precios small{display:block;color:var(--muted);font-size:.8rem}
+.chip{display:inline-block;background:#eef0fb;color:var(--navy);border-radius:999px;padding:3px 9px;font-size:.74rem;font-weight:600;margin-left:6px;vertical-align:1px}
+.chip.no{background:#f1f1f4;color:var(--muted)}
+
+/* Elegir */
+.tipo{background:var(--card);border-radius:16px;padding:14px 14px 14px 16px;display:flex;align-items:center;gap:12px}
+.tipo .nm{flex:1;min-width:0}
+.tipo b{display:block;font-size:1.08rem;font-weight:600}
+.tipo small{display:block;color:var(--muted);font-size:.84rem}
+.tipo .p{font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.ctr{display:flex;align-items:center;gap:12px}
+.ctr button{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:1.15rem;line-height:1}
+.ctr button:disabled{opacity:.35}
+.ctr output{min-width:2ch;text-align:center;font-variant-numeric:tabular-nums;font-size:1.05rem}
+.cart{background:var(--card);border-radius:16px;padding:14px 16px;display:grid;gap:8px;font-size:.92rem;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.cart h2{margin:0;font-size:.72rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.row span:last-child{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* Pie */
+.foot{position:sticky;bottom:0;z-index:5;background:#fff;border-top:1px solid #e3e4e8;padding:14px 24px calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;align-items:center;gap:12px}
+.foot .tot{flex:1}
+.foot small{display:block;color:var(--muted);font-size:.74rem}
+.foot b{font-size:1.4rem;font-weight:700;font-variant-numeric:tabular-nums}
+.foot.big b{font-size:1.9rem}
+.cta{padding:14px 20px;border:0;border-radius:14px;background:var(--navy);color:#fff;font-weight:600;font-size:1rem}
+.cta:disabled{opacity:.35;cursor:not-allowed}
+
+/* Datos */
+.fld{display:grid;gap:8px}
+.fld label,.fld .lb{font-size:.84rem;font-weight:500;color:#3b4250}
+.fld input,.fld select{border:1px solid var(--line);border-radius:12px;padding:13px 14px;font-size:1rem;background:#fff;width:100%;appearance:none}
+.asis{background:var(--card);border-radius:16px;padding:14px 16px 16px;display:grid;gap:10px}
+.asis .h{display:flex;justify-content:space-between;font-weight:600;font-size:.92rem}
+.asis .h span{color:var(--muted);font-weight:500}
+.asis .two{display:grid;grid-template-columns:1.6fr 1fr;gap:10px}
+
+/* Pagar */
+.pay{background:var(--navy);color:#fff;border-radius:18px;padding:18px;display:grid;gap:10px}
+.pay .lbl{font-size:.82rem;opacity:.8}
+.pay .amt{font-size:2.1rem;font-weight:700;font-variant-numeric:tabular-nums;margin-bottom:4px}
+.pay .ln{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.1);border-radius:10px;padding:9px 10px 9px 12px;font-size:.86rem}
+.pay .ln span{opacity:.75}
+.pay .ln code{flex:1;font:600 .86rem var(--font);word-break:break-all}
+.copy{border:0;background:#fff;color:var(--navy);border-radius:8px;padding:6px 10px;font-weight:700;font-size:.8rem;flex:none}
+.drop{display:grid;place-items:center;text-align:center;gap:4px;border:1.5px dashed #b9c0cb;border-radius:14px;padding:22px;font-size:.92rem;color:var(--muted);background:#fff;position:relative}
+.drop.ok{border-color:#3a9a5a;color:var(--okfg);background:var(--okbg)}
+.drop.ok small{color:var(--okfg)}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.note{color:var(--muted);font-size:.82rem;line-height:1.45;margin:0}
+.hp{position:absolute;left:-9999px}
+
+/* Enviado */
+.done{text-align:center;display:grid;gap:14px;justify-items:center;padding-top:8px}
+.tick{width:64px;height:64px;border-radius:50%;background:var(--ok);display:grid;place-items:center}
+.order{background:var(--card);border-radius:18px;padding:18px 16px;display:grid;gap:8px;width:100%;box-shadow:0 6px 18px rgba(0,0,0,.08);font-size:.92rem}
+.order .id{font-size:1.9rem;font-weight:700;color:var(--navy);letter-spacing:.02em}
+.status{display:inline-flex;align-items:center;gap:6px;background:#fff1c8;color:#6b4e00;border-radius:999px;padding:5px 12px;font-weight:600;font-size:.82rem;justify-self:center}
+.status i{width:7px;height:7px;border-radius:50%;background:#e0a100}
+.order .cartrows{display:grid;gap:6px;text-align:left;margin-top:4px}
+.wa{display:block;width:100%;padding:16px;border-radius:14px;background:var(--ok);color:#fff;font-weight:600;font-size:1rem;text-decoration:none;text-align:center}
+.muted{color:var(--muted);font-size:.9rem;line-height:1.45;margin:0}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="comun.js"></script>
+<script>
+const VINCULOS = ['Socio', 'Familiar de jugador', 'Jugador', 'Invitado'];
+const S = { step: 0, ev: null, loadErr: '', qty: {}, nombre: '', dni: '', tel: '', email: '', vinculo: '',
+  asis: {}, sync: true, file: null, sending: false, sendErr: '', num: 0, total: 0, enviadas: [] };
+const app = document.getElementById('app');
+const cur = () => app.querySelector('.screen:not(.leaving)');
+const $ = id => cur().querySelector('#' + id); // durante la transición conviven dos pantallas con los mismos ids
+const tipos = () => (S.ev ? S.ev.tipos : []);
+const cant = () => Object.values(S.qty).reduce((a, b) => a + b, 0);
+const total = () => tipos().reduce((s, t) => s + (S.qty[t.id] || 0) * t.precio, 0);
+const tope = () => Math.min(20, S.ev && S.ev.quedan != null ? S.ev.quedan : 20);
+
+// Una entrada por persona: la lista sale de las cantidades elegidas, en el orden de los tipos.
+function asistentes() {
+  const out = [];
+  tipos().forEach(t => {
+    for (let i = 0; i < (S.qty[t.id] || 0); i++) {
+      const k = t.id + ':' + i;
+      S.asis[k] = S.asis[k] || { nombre: '', dni: '' };
+      out.push({ k, tipo: t, ...S.asis[k] });
+    }
+  });
+  if (out.length && S.sync) { S.asis[out[0].k].nombre = S.nombre; S.asis[out[0].k].dni = S.dni; out[0].nombre = S.nombre; out[0].dni = S.dni; }
+  return out;
+}
+const datosOk = () => S.nombre.trim().length >= 3 && S.tel.replace(/\D/g, '').length >= 8
+  && (!S.email || /^\S+@\S+\.\S+$/.test(S.email)) && asistentes().every(a => a.nombre.trim().length >= 3);
+
+function go(step, push = true) {
+  const dir = step >= S.step ? 'in-r' : 'in-l';
+  const old = cur();
+  S.step = step; S.sendErr = '';
+  if (push) history.pushState({ step }, '');
+  if (old) { old.style.top = -window.scrollY + 'px'; old.classList.add('leaving'); }
+  const scr = document.createElement('div');
+  scr.className = 'screen';
+  app.appendChild(scr);
+  render(); window.scrollTo(0, 0);
+  if (!old) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { old.remove(); return; }
+  scr.classList.add(dir);
+  scr.addEventListener('animationend', () => { old.remove(); scr.classList.remove(dir); }, { once: true });
+}
+addEventListener('popstate', e => {
+  if (S.step === 4) { history.pushState({ step: 4 }, ''); return; } // el pedido ya se envió
+  go(e.state ? e.state.step : 0, false);
+});
+
+function shell(inner, foot = '', white = false) {
+  const scr = cur();
+  scr.classList.toggle('white', white);
+  const prog = S.step > 0 ? `<div class="prog">${[1, 2, 3, 4].map(i => `<i class="${S.step >= i ? 'on' : ''}"></i>`).join('')}</div>` : '';
+  scr.innerHTML = `<div class="top"><button class="hd" id="hd" ${S.step > 0 && S.step < 4 ? 'aria-label="Volver"' : 'tabindex=-1'}>
+      <img src="logo.png" alt=""><span><b>Entradas SMRHC</b><small>${esc(S.ev ? S.ev.titulo : 'San Miguel Rugby & Hockey Club')}</small></span></button>${prog}</div>
+    ${inner}${foot}`;
+  $('hd').onclick = () => { if (S.step > 0 && S.step < 4) history.back(); };
+}
+const footer = (label, enabled, big = false, lbl = 'Total', amount = total()) =>
+  `<div class="foot${big ? ' big' : ''}"><div class="tot"><small>${lbl}</small><b>${money(amount)}</b></div><button class="cta" id="next" ${enabled ? '' : 'disabled'}>${label}</button></div>`;
+
+function eventoCard(ev) {
+  return `<div class="ev"><div class="bar"><i></i><i></i><i></i></div><div class="in">
+    <div class="club"><img src="logo.png" alt="Escudo SMRHC"><span>${esc(ev.club).toUpperCase()}</span></div>
+    <h1 class="tit">${esc(ev.titulo).toUpperCase()}</h1>
+    ${ev.bajada ? `<span class="baj">${esc(ev.bajada).toUpperCase()}</span>` : ''}
+    <div class="facts">
+      <div><small>Fecha</small><b>${esc(ev.fecha)}</b></div><div><small>Horario</small><b>${esc(ev.hora)}</b></div>
+      <div><small>Lugar</small><b>${esc(ev.lugar)}</b></div><div><small>Vestimenta</small><b>${esc(ev.vestimenta)}</b></div>
+    </div></div></div>`;
+}
+
+function render() {
+  if (S.step === 0 && !S.ev && !S.loadErr) {
+    const scr = cur(); scr.classList.add('white');
+    scr.innerHTML = `<div class="splash" role="status"><img src="logo.png" alt="San Miguel Rugby & Hockey Club"><b>Entradas SMRHC</b><small>Cargando el evento…</small><div class="spin" aria-hidden="true"></div></div>`;
+  } else if (S.step === 0) {
+    const ev = S.ev;
+    if (!ev) { shell(`<main class="appear"><div class="err">${esc(S.loadErr)}</div></main>`, '', true); return; }
+    const hay = tipos().filter(t => t.quedan !== 0);
+    const agotado = ev.quedan === 0 || !hay.length;
+    const abierto = ev.ventas_abiertas && !agotado;
+    const desde = hay.length ? Math.min(...hay.map(t => t.precio)) : 0;
+    shell(`<main class="appear">${eventoCard(ev)}
+      <h2 class="sec">Entradas</h2>
+      <div class="precios">${tipos().map(t => `<div class="row"><span>${esc(t.nombre)}${t.quedan === 0 ? '<span class="chip no">Agotadas</span>' : ''}${t.detalle ? `<small>${esc(t.detalle)}</small>` : ''}</span><span><b>${t.precio ? money(t.precio) : 'Sin cargo'}</b></span></div>`).join('')}</div>
+      ${!ev.ventas_abiertas ? '<div class="aviso">La venta de entradas está cerrada.</div>'
+        : agotado ? '<div class="aviso">Se agotaron las entradas.</div>'
+        : ev.quedan != null && ev.quedan <= 30 ? `<div class="aviso">Quedan ${ev.quedan} entradas.</div>` : ''}
+      <p class="note">Cada asistente recibe su propia entrada con código QR, a su nombre.</p>
+      </main>`, abierto ? footer('Comprar entradas', true, false, 'Desde', desde) : '', true);
+    if (abierto) $('next').onclick = () => {
+      if (!cant()) { const t = hay[0]; S.qty[t.id] = 1; }
+      go(1);
+    };
+  } else if (S.step === 1) {
+    const n = cant();
+    shell(`<main><h1>Elegí tus entradas</h1>
+      ${tipos().map(t => {
+        const q = S.qty[t.id] || 0;
+        const maxT = Math.min(tope() - n + q, t.quedan != null ? t.quedan : 20);
+        return `<div class="tipo"><div class="nm"><b>${esc(t.nombre)}</b>${t.detalle ? `<small>${esc(t.detalle)}</small>` : ''}<div class="p">${t.precio ? money(t.precio) : 'Sin cargo'}</div></div>
+          ${t.quedan === 0 && !q ? '<span class="chip no">Agotadas</span>' : `<div class="ctr"><button data-m="${t.id}" aria-label="Restar ${esc(t.nombre)}" ${q ? '' : 'disabled'}>−</button><output>${q}</output><button data-p="${t.id}" aria-label="Sumar ${esc(t.nombre)}" ${q < maxT ? '' : 'disabled'}>+</button></div>`}</div>`;
+      }).join('')}
+      ${n ? `<div class="cart"><h2>Tu pedido</h2>${tipos().filter(t => S.qty[t.id]).map(t => `<div class="row"><span>${S.qty[t.id]} × ${esc(t.nombre)}</span><span>${money(S.qty[t.id] * t.precio)}</span></div>`).join('')}</div>` : ''}
+      <p class="note">Después vas a poner el nombre de cada persona: cada una tiene su entrada.</p>
+      </main>`, footer('Continuar', n > 0, true));
+    cur().querySelectorAll('[data-m]').forEach(b => b.onclick = () => { S.qty[b.dataset.m] = Math.max(0, (S.qty[b.dataset.m] || 0) - 1); render(); });
+    cur().querySelectorAll('[data-p]').forEach(b => b.onclick = () => { S.qty[b.dataset.p] = (S.qty[b.dataset.p] || 0) + 1; render(); });
+    $('next').onclick = () => go(2);
+  } else if (S.step === 2) {
+    const as = asistentes();
+    shell(`<main><h1>Tus datos</h1>
+      <div class="fld"><label for="nombre">Nombre y apellido</label><input id="nombre" autocomplete="name" value="${esc(S.nombre)}"></div>
+      <div class="fld"><label for="dni">DNI</label><input id="dni" inputmode="numeric" value="${esc(S.dni)}"></div>
+      <div class="fld"><label for="tel">WhatsApp</label><input id="tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="11 5555-5555" value="${esc(S.tel)}"></div>
+      <div class="fld"><label for="email">Email (opcional)</label><input id="email" type="email" autocomplete="email" value="${esc(S.email)}"></div>
+      <div class="fld"><label for="vinculo">¿Sos socio o familiar de jugador?</label><select id="vinculo"><option value="">Elegí una opción</option>${VINCULOS.map(o => `<option ${S.vinculo === o ? 'selected' : ''}>${o}</option>`).join('')}</select></div>
+      <h2 class="sec">${as.length > 1 ? 'Quiénes van' : 'Quién va'}</h2>
+      ${as.map((a, i) => `<div class="asis"><div class="h">Entrada ${i + 1}<span>${esc(a.tipo.nombre)}</span></div>
+        <div class="two"><div class="fld"><label for="an${i}">Nombre y apellido</label><input id="an${i}" data-k="${a.k}" data-f="nombre" value="${esc(a.nombre)}"></div>
+        <div class="fld"><label for="ad${i}">DNI</label><input id="ad${i}" data-k="${a.k}" data-f="dni" inputmode="numeric" value="${esc(a.dni)}"></div></div></div>`).join('')}
+      <p class="note">El nombre sale en la entrada y se controla en la puerta.</p>
+      </main>`, footer('Ir a pagar', datosOk()));
+    const next = $('next');
+    const first = as[0] && as[0].k;
+    ['nombre', 'dni', 'tel', 'email'].forEach(k => $(k).oninput = e => {
+      S[k] = e.target.value;
+      if (S.sync && (k === 'nombre' || k === 'dni')) { const f = cur().querySelector(`[data-k="${first}"][data-f="${k}"]`); if (f) f.value = S[k]; }
+      next.disabled = !datosOk();
+    });
+    $('vinculo').onchange = e => S.vinculo = e.target.value;
+    cur().querySelectorAll('[data-k]').forEach(inp => inp.oninput = () => {
+      if (inp.dataset.k === first) S.sync = false;
+      S.asis[inp.dataset.k][inp.dataset.f] = inp.value;
+      next.disabled = !datosOk();
+    });
+    next.onclick = () => go(3);
+  } else if (S.step === 3) {
+    const ev = S.ev;
+    const gratis = total() === 0;
+    shell(`<main><h1>${gratis ? 'Confirmá tu pedido' : 'Transferí y subí el comprobante'}</h1>
+      ${gratis ? '' : `<div class="pay"><span class="lbl">Monto exacto a transferir</span><span class="amt">${money(total())}</span>
+        ${ev.alias ? `<div class="ln"><span>Alias</span><code>${esc(ev.alias)}</code><button class="copy" data-cp="${esc(ev.alias)}">Copiar</button></div>` : ''}
+        ${ev.cbu ? `<div class="ln"><span>CBU/CVU</span><code>${esc(ev.cbu)}</code><button class="copy" data-cp="${esc(ev.cbu)}">Copiar</button></div>` : ''}
+        ${ev.titular ? `<div class="ln"><span>Titular</span><code>${esc(ev.titular)}</code></div>` : ''}</div>`}
+      ${gratis ? `<div class="cart"><h2>Tu pedido</h2>${asistentes().map(a => `<div class="row"><span>${esc(a.nombre)}</span><span>${esc(a.tipo.nombre)}</span></div>`).join('')}</div>
+      <p class="note">Estas entradas son sin cargo. Cuando el club confirme el pedido, te mandamos por WhatsApp el link de cada una con su código QR.</p>`
+      : `<label class="drop ${S.file ? 'ok' : ''}">${S.file ? `<b>✓ ${esc(S.file.name)}</b><small>Tocá para cambiar el archivo</small>` : `<b>Subí tu comprobante</b><small>Foto o PDF de la transferencia</small>`}
+        <input type="file" id="file" accept="image/*,application/pdf"></label>
+      <p class="note">Transferí el monto exacto. Verificamos cada pago y te mandamos por WhatsApp el link de cada entrada con su código QR.</p>`}
+      <input class="hp" id="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      ${S.sendErr ? `<div class="err">${esc(S.sendErr)}</div>` : ''}</main>`,
+      footer(S.sending ? 'Enviando…' : 'Enviar pedido', (gratis || !!S.file) && !S.sending));
+    cur().querySelectorAll('[data-cp]').forEach(b => b.onclick = () => {
+      const done = () => { b.textContent = 'Copiado'; setTimeout(() => b.textContent = 'Copiar', 1400); };
+      try { navigator.clipboard.writeText(b.dataset.cp).then(done, done); } catch (e) { done(); }
+    });
+    if (!gratis) $('file').onchange = e => {
+      const f = e.target.files[0]; if (!f) return;
+      if (f.size > 15 * 1024 * 1024) { S.sendErr = 'El archivo pesa más de 15 MB.'; render(); return; }
+      S.file = f; S.sendErr = ''; render();
+    };
+    $('next').onclick = enviar;
+  } else {
+    const ev = S.ev;
+    const msg = `Hola! Hice el pedido N° ${S.num} de entradas para ${ev.titulo} a nombre de ${S.nombre.trim()}, total ${money(S.total)}.`;
+    shell(`<main><div class="done">
+      <div class="tick"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+      <h1>Pedido enviado</h1>
+      <div class="order"><span class="muted" style="font-size:.85rem">Tu número de pedido</span><span class="id">N° ${S.num}</span><span class="status"><i></i>Pago en revisión</span>
+        <div class="cartrows">${S.enviadas.map(a => `<div class="row"><span>${esc(a.nombre)} · ${esc(a.tipo)}</span><span>${money(a.precio)}</span></div>`).join('')}
+        <div class="row"><b>Total</b><b>${money(S.total)}</b></div></div></div>
+      <p class="muted">Cuando el club confirme la transferencia, te mandamos por WhatsApp el link de cada entrada con su código QR. Cada persona muestra el suyo en la puerta.</p>
+      ${ev.whatsapp ? `<a class="wa" href="https://wa.me/${ev.whatsapp}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Escribir al organizador</a>` : ''}
+      </div></main>`);
+  }
+}
+
+// Achica fotos grandes antes de subir (más rápido con datos móviles). PDF y fallos: va el original.
+async function prepararArchivo(f) {
+  const leer = blob => new Promise((ok, ko) => { const r = new FileReader(); r.onload = () => ok(r.result.split(',')[1]); r.onerror = ko; r.readAsDataURL(blob); });
+  if (/^image\/(jpeg|png|webp|heic|heif)$/.test(f.type)) {
+    try {
+      const bmp = await createImageBitmap(f);
+      const k = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+      const cv = document.createElement('canvas');
+      cv.width = Math.round(bmp.width * k); cv.height = Math.round(bmp.height * k);
+      const g = cv.getContext('2d');
+      g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height); // PNG con transparencia → fondo blanco
+      g.drawImage(bmp, 0, 0, cv.width, cv.height);
+      const blob = await new Promise(ok => cv.toBlob(ok, 'image/jpeg', 0.82));
+      if (blob && (blob.size < f.size || !/jpeg|png|webp/.test(f.type))) return { type: 'image/jpeg', data: await leer(blob) };
+    } catch (e) { /* se manda el original */ }
+  }
+  const type = f.type || (/\.pdf$/i.test(f.name) ? 'application/pdf' : 'image/jpeg');
+  if (f.size > 8 * 1024 * 1024) throw new Error('El comprobante pesa más de 8 MB. Mandá una captura de pantalla.');
+  return { type, data: await leer(f) };
+}
+
+async function enviar() {
+  S.sending = true; S.sendErr = ''; render();
+  try {
+    const as = asistentes();
+    const file = total() > 0 && S.file ? await prepararArchivo(S.file) : null;
+    const r = await rpc('ent_comprar', { p: {
+      hp: $('hp').value, nombre: S.nombre, dni: S.dni, tel: S.tel, email: S.email, vinculo: S.vinculo,
+      entradas: as.map(a => ({ tipo_id: a.tipo.id, nombre: a.nombre, dni: a.dni })), file,
+    } }, 60000);
+    S.num = r.num; S.total = r.total;
+    S.enviadas = as.map(a => ({ nombre: a.nombre.trim(), tipo: a.tipo.nombre, precio: a.tipo.precio }));
+    S.sending = false; go(4);
+  } catch (e) {
+    S.sending = false;
+    S.sendErr = e.message || 'No se pudo enviar. Revisá tu conexión e intentá de nuevo.';
+    if (/agot|Quedan|disponible/.test(S.sendErr)) cargar(false); // refresca los lugares que quedan
+    render();
+  }
+}
+
+async function cargar(inicio = true) {
+  if (inicio) { history.replaceState({ step: 0 }, ''); go(0, false); }
+  try {
+    S.ev = await rpc('ent_info');
+    document.title = S.ev.titulo + ' · Entradas SMRHC';
+  } catch (e) { if (inicio) S.loadErr = 'No pudimos cargar el evento. Recargá la página.'; }
+  if (inicio) render();
+}
+cargar();
+</script>
+</body>
+</html>

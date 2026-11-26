@@ -62,3 +62,16 @@ La key es pública a propósito: las tablas están cerradas y todo pasa por func
 3. En cada celular: abrir esa dirección en Chrome → menú ⋮ → **Agregar a pantalla principal**.
 
 Para probarla en la compu: `python3 -m http.server` y abrir `http://localhost:8000`.
+
+## Entradas (venta con QR)
+
+Carpeta [`entradas/`](entradas/): venta de entradas nominales para eventos del club (ej. Cena de Fin de Año). Usa la misma base de Supabase, con tablas y funciones aparte (`ent_*`, ver [`supabase/entradas.sql`](supabase/entradas.sql)).
+
+| Página | Para quién |
+|---|---|
+| `entradas/` | El público: elige entradas, pone el nombre de cada asistente, transfiere y sube el comprobante |
+| `entradas/admin.html` | Organizador (PIN admin): verifica comprobantes, marca "Pagó", manda los links por WhatsApp, carga ventas a mano, precios y cupo |
+| `entradas/e.html?t=…` | La entrada personal de cada asistente, con su QR (solo aparece cuando el pedido está pagado) |
+| `entradas/puerta.html` | Control de puerta (PIN puerta): escanea el QR con la cámara y avisa si ya ingresó |
+
+Cada asistente tiene su propia entrada y su propio link. El cupo se controla en la base (no se puede sobrevender).

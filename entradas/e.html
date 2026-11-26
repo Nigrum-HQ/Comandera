@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tu entrada · SMRHC</title>
+<meta name="theme-color" content="#e5e7eb">
+<meta name="robots" content="noindex">
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#1d4ed8; --blue2:#60a5fa; --ink:#0b0b0d; --panel:#16171b; --line:#2a2b31; --dim:#9ca3af; --qr:#0a1130;
+  --page:#e5e7eb;
+  --display:"Bebas Neue","Arial Narrow",Impact,sans-serif;
+  --font:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--page);font-family:var(--font);color:#fff;-webkit-text-size-adjust:100%}
+.wrap{max-width:440px;margin:0 auto;padding:calc(env(safe-area-inset-top,0px) + 14px) 14px calc(env(safe-area-inset-bottom,0px) + 24px)}
+.t{background:var(--ink);border-radius:20px;position:relative;overflow:hidden}
+.bar{display:flex;height:9px}.bar i{flex:1}.bar i:nth-child(1){background:var(--blue)}.bar i:nth-child(2){background:var(--ink)}.bar i:nth-child(3){background:#9ca3af}
+.top{padding:22px 24px 20px;display:grid;gap:14px}
+.club{display:flex;align-items:center;gap:16px}
+.club img{width:64px;height:64px;object-fit:contain}
+.club span{border-left:3px solid var(--blue);padding-left:13px;font-family:var(--display);font-size:1.2rem;letter-spacing:.16em;line-height:1.15}
+h1{text-wrap:balance;font-family:var(--display);font-weight:400;font-size:3.6rem;line-height:.9;margin:10px 0 0;letter-spacing:.01em}
+.baj{justify-self:start;background:var(--blue);font-family:var(--display);letter-spacing:.16em;font-size:1.15rem;padding:6px 12px 4px}
+hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+.lbl{color:var(--dim);font-size:.66rem;letter-spacing:.32em;text-transform:uppercase}
+.name{font-family:var(--display);font-size:2.2rem;line-height:1;margin-top:6px;letter-spacing:.01em;overflow-wrap:anywhere}
+.tipo{color:var(--blue2);font-weight:500;font-size:.95rem;margin-top:2px}
+.con{background:var(--panel);border-left:3px solid var(--blue);border-radius:10px;padding:12px 16px;display:grid;gap:4px}
+.con div{font-size:1rem}
+.facts{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.facts div{padding:13px 8px 11px;text-align:center;border:0 solid var(--line)}
+.facts div:nth-child(odd){border-right-width:1px}.facts div:nth-child(-n+2){border-bottom-width:1px}
+.facts b{display:block;font-family:var(--display);font-weight:400;font-size:1.45rem;letter-spacing:.02em;margin-top:4px}
+.cut{position:relative;height:30px}
+.cut:before{content:"";position:absolute;left:22px;right:22px;top:50%;border-top:2px dashed #3a3b42}
+.cut i{position:absolute;top:50%;width:26px;height:26px;margin-top:-13px;border-radius:50%;background:var(--page)}
+.cut i:first-child{left:-13px}.cut i:last-child{right:-13px}
+.bot{padding:6px 24px 18px;display:grid;gap:14px}
+.qr{background:#fff;color:#111;border-radius:16px;padding:22px 20px 18px;display:grid;justify-items:center;gap:6px;position:relative}
+.qr svg{width:100%;max-width:240px;height:auto;display:block}
+.qr .lbl{color:#6b7280;margin-top:8px}
+.qr .code{font-family:var(--display);color:var(--blue);font-size:2.6rem;line-height:1;letter-spacing:.02em}
+.qr small{color:#6b7280;font-size:.84rem}
+.sello{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.sello span{border:4px solid #16a34a;color:#16a34a;background:rgba(255,255,255,.88);font-family:var(--display);font-size:2.1rem;letter-spacing:.06em;padding:8px 16px 4px;border-radius:10px;transform:rotate(-12deg);text-align:center;line-height:1.05}
+.sello span small{display:block;font-family:var(--font);font-size:.8rem;letter-spacing:0;color:#16a34a;font-weight:600}
+details{color:var(--dim);font-size:.95rem}
+summary{cursor:pointer;padding:4px 0;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary:before{content:"▸ ";display:inline-block;transition:transform .15s}
+details[open] summary:before{transform:rotate(90deg)}
+.door{display:grid;gap:10px;margin-top:10px}
+.door input{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;color:#fff;font-size:1rem;width:100%}
+.door button{background:var(--blue);border:0;border-radius:10px;padding:13px;color:#fff;font-weight:600;font-size:1rem;cursor:pointer}
+.door button:disabled{opacity:.5}
+.res{border-radius:10px;padding:12px 14px;font-weight:600;color:#fff}
+.res.ok{background:#15803d}.res.no{background:#b91c1c}.res.ya{background:#b45309}
+.msg{background:#fff;color:#16191f;border-radius:20px;padding:32px 24px;text-align:center;display:grid;gap:12px;justify-items:center}
+.msg img{width:84px;height:84px;object-fit:contain}
+.msg h2{margin:0;font-size:1.35rem}
+.msg p{margin:0;color:#6b7280;line-height:1.45}
+.msg a{display:block;width:100%;padding:15px;border-radius:14px;background:#25c45d;color:#fff;font-weight:600;text-decoration:none}
+.spin{width:26px;height:26px;border-radius:50%;border:3px solid #e1e2e6;border-top-color:#001392;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tip{color:#6b7280;text-align:center;font-size:.82rem;margin:14px 0 0;line-height:1.4}
+@media (max-width:370px){h1{font-size:3rem}.name{font-size:1.9rem}.facts b{font-size:1.25rem}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="msg"><img src="logo.png" alt=""><div class="spin" role="status" aria-label="Cargando"></div></div></div>
+<script src="vendor/qrcode.js"></script>
+<script src="comun.js"></script>
+<script>
+const app = document.getElementById('app');
+const token = (new URLSearchParams(location.search).get('t') || '').trim();
+
+function qrSvg(text) {
+  const q = qrcode(0, 'M');
+  q.addData(text); q.make();
+  const n = q.getModuleCount();
+  let d = '';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) d += `M${c} ${r}h1v1h-1z`;
+  return `<svg viewBox="-2 -2 ${n + 4} ${n + 4}" role="img" aria-label="Código QR de la entrada" shape-rendering="crispEdges"><path fill="#0a1130" d="${d}"/></svg>`;
+}
+
+function mensaje(titulo, texto, wa) {
+  app.innerHTML = `<div class="msg"><img src="logo.png" alt="Escudo SMRHC"><h2>${esc(titulo)}</h2><p>${texto}</p>
+    ${wa ? `<a href="https://wa.me/${wa}" target="_blank" rel="noopener">Escribir al organizador</a>` : ''}</div>`;
+}
+
+function render(e) {
+  document.title = `${e.codigo} · ${e.titulo}`;
+  const con = e.viene_con.map(o => `<div>${esc(o.nombre)}${o.tipo !== 'Adulto' ? ` (${esc(o.tipo.toLowerCase())})` : ''}</div>`).join('');
+  app.innerHTML = `<article class="t">
+    <div class="bar"><i></i><i></i><i></i></div>
+    <div class="top">
+      <div class="club"><img src="logo.png" alt="Escudo SMRHC"><span>${esc(e.club).toUpperCase()}</span></div>
+      <h1>${esc(e.titulo).toUpperCase()}</h1>
+      ${e.bajada ? `<span class="baj">${esc(e.bajada).toUpperCase()}</span>` : ''}
+      <hr>
+      <div><div class="lbl">Asistente</div><div class="name">${esc(e.nombre).toUpperCase()}</div><div class="tipo">${esc(e.tipo)}</div></div>
+      ${con ? `<div class="con"><span class="lbl">Viene con</span>${con}</div>` : ''}
+      <div class="facts">
+        <div><span class="lbl">Fecha</span><b>${esc(e.fecha).toUpperCase()}</b></div><div><span class="lbl">Horario</span><b>${esc(e.hora).toUpperCase()}</b></div>
+        <div><span class="lbl">Lugar</span><b>${esc(e.lugar).toUpperCase()}</b></div><div><span class="lbl">Vestimenta</span><b>${esc(e.vestimenta).toUpperCase()}</b></div>
+      </div>
+    </div>
+    <div class="cut" aria-hidden="true"><i></i><i></i></div>
+    <div class="bot">
+      <div class="qr">${qrSvg(location.origin + location.pathname + '?t=' + token)}
+        <span class="lbl">Entrada N°</span><span class="code">${esc(e.codigo)}</span><small>Personal e intransferible</small>
+        ${e.ingreso_at ? `<div class="sello"><span>INGRESÓ<small>${hora(e.ingreso_at)} hs</small></span></div>` : ''}</div>
+      <details id="door"><summary>Control de puerta</summary>
+        <div class="door"><input id="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN de puerta" value="${esc(guardado('pin') || '')}">
+        <button id="marcar">Marcar ingreso</button><div id="res"></div></div></details>
+    </div></article>
+    <p class="tip">Guardá este link o sacale captura de pantalla. En la puerta mostrá el código QR.</p>`;
+  document.getElementById('marcar').onclick = marcar;
+}
+
+async function marcar() {
+  const btn = document.getElementById('marcar'), out = document.getElementById('res');
+  const pin = document.getElementById('pin').value.trim();
+  btn.disabled = true; out.innerHTML = '';
+  try {
+    const r = await rpc('ent_ingreso', { p_pin: pin, p_codigo: token });
+    guardado('pin', pin);
+    if (r.resultado === 'ok') {
+      await cargar(true);
+      document.getElementById('res').innerHTML = `<div class="res ok">✓ Ingreso registrado: ${esc(r.nombre)}</div>`;
+      return;
+    }
+    const txt = r.resultado === 'ya_ingreso' ? `Ya ingresó a las ${hora(r.ingreso_at)}` : r.mensaje;
+    out.innerHTML = `<div class="res ${r.resultado === 'ya_ingreso' ? 'ya' : 'no'}">${esc(txt)}</div>`;
+  } catch (e) {
+    if (e.code === '28000') guardado('pin', null);
+    out.innerHTML = `<div class="res no">${esc(e.message)}</div>`;
+  }
+  btn.disabled = false;
+}
+
+async function cargar(abierto) {
+  if (!/^[0-9a-f]{32}$/i.test(token)) return mensaje('Link incompleto', 'Revisá que hayas abierto el link completo que te mandaron por WhatsApp.');
+  try {
+    const e = await rpc('ent_entrada', { p_token: token });
+    if (e.estado === 'pendiente') return mensaje('Pago en revisión', `Tu entrada ${esc(e.codigo)} a nombre de <b>${esc(e.nombre)}</b> está reservada. Cuando el club confirme la transferencia, este link va a mostrar tu código QR.`, e.whatsapp);
+    if (e.estado === 'rechazado') return mensaje('Entrada no válida', 'El pago de este pedido no se pudo confirmar. Escribile al organizador.', e.whatsapp);
+    render(e);
+    if (abierto) document.getElementById('door').open = true;
+  } catch (err) {
+    mensaje(err.offline ? 'Sin conexión' : 'No encontramos la entrada', esc(err.message));
+  }
+}
+cargar();
+</script>
+</body>
+</html>

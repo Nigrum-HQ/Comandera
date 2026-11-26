@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Panel de entradas · SMRHC</title>
+<meta name="theme-color" content="#ffffff">
+<meta name="robots" content="noindex">
+<link rel="icon" href="logo.png">
+<style>
+:root{
+  --navy:#001392; --ink:#16191f; --muted:#6b7280; --line:#d9dbe1; --bg:#f2f2f7; --card:#fff;
+  --ok:#25c45d; --okfg:#1e7a3c; --okbg:#eaf7ee; --err:#c0392b; --warnbg:#fff1c8; --warnfg:#6b4e00;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+.hidden{display:none!important}
+.app{max-width:760px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column}
+.top{position:sticky;top:0;z-index:5;background:#fff;padding-top:env(safe-area-inset-top,0px);border-bottom:1px solid #e3e4e8}
+.hd{display:flex;align-items:center;gap:12px;padding:12px 18px 8px}
+.hd img{width:36px;height:36px;object-fit:contain}
+.hd .tt{flex:1;min-width:0}
+.hd b{display:block;font-size:1.05rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hd small{display:block;color:var(--muted);font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tabs{display:flex;gap:4px;padding:0 12px}
+.tabs button{flex:1;border:0;background:none;padding:10px 4px 12px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;font-size:.95rem}
+.tabs button[aria-selected="true"]{color:var(--navy);border-bottom-color:var(--navy)}
+main{flex:1;padding:16px 16px calc(env(safe-area-inset-bottom,0px) + 32px);display:grid;gap:12px;align-content:start}
+h2{margin:6px 0 0;font-size:.74rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.btn{border:0;border-radius:12px;padding:11px 14px;font-weight:600;background:var(--navy);color:#fff;font-size:.95rem;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn.ok{background:var(--ok)}
+.btn.bad{background:#fff;color:var(--err);border:1px solid #f0c4bf}
+.btn.sm{padding:7px 10px;font-size:.84rem;border-radius:9px}
+.btn:disabled{opacity:.4}
+.lnk{border:0;background:none;color:var(--navy);font-weight:600;padding:4px 2px;font-size:.88rem}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+main>*{min-width:0}
+html,body{overflow-x:hidden}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.chips button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 12px;font-size:.86rem;font-weight:500;white-space:nowrap}
+.chips button[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.search{border:1px solid var(--line);border-radius:12px;padding:11px 14px;font-size:1rem;background:#fff;width:100%}
+
+/* Login */
+.login{min-height:100dvh;display:grid;place-content:center;justify-items:center;gap:14px;padding:24px;text-align:center;background:#fff}
+.login img{width:96px;height:96px;object-fit:contain}
+.login h1{margin:0;font-size:1.4rem}
+.login input{border:1px solid var(--line);border-radius:12px;padding:14px;font-size:1.3rem;text-align:center;letter-spacing:.3em;width:220px}
+.login .btn{width:220px;padding:14px}
+.err{background:#fdecea;color:var(--err);border-radius:10px;padding:10px 12px;font-size:.9rem}
+
+/* Pedidos */
+.ped{background:var(--card);border-radius:16px;padding:14px 14px 12px;display:grid;gap:10px;box-shadow:0 1px 0 rgba(0,0,0,.03)}
+.ped .h{display:flex;gap:10px;align-items:flex-start}
+.ped .h .nm{flex:1;min-width:0}
+.ped .h b{font-size:1.05rem}
+.ped .h small{display:block;color:var(--muted);font-size:.82rem;margin-top:2px}
+.ped .tot{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 9px;font-size:.74rem;font-weight:600;white-space:nowrap}
+.pill i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill.pendiente{background:var(--warnbg);color:var(--warnfg)}
+.pill.pagado{background:var(--okbg);color:var(--okfg)}
+.pill.rechazado{background:#fdecea;color:var(--err)}
+.pill.in{background:#e0e7ff;color:#3730a3}
+.ents{display:grid;gap:2px;border-top:1px solid #eef0f3;padding-top:8px}
+.ent{display:flex;align-items:center;gap:8px;font-size:.9rem;padding:4px 0}
+.ent code{font:600 .8rem ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--navy);flex:none}
+.ent .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ent .n small{color:var(--muted)}
+.nota{background:#f7f7fa;border-radius:8px;padding:6px 10px;font-size:.84rem;color:#3b4250}
+.sent{color:var(--okfg);font-size:.8rem;font-weight:500}
+.empty{color:var(--muted);text-align:center;padding:30px 10px}
+
+/* Resumen */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--card);border-radius:14px;padding:14px}
+.stat small{display:block;color:var(--muted);font-size:.8rem}
+.stat b{display:block;font-size:1.6rem;font-variant-numeric:tabular-nums;margin-top:2px}
+.stat.hi{background:var(--navy);color:#fff}.stat.hi small{color:#c7cdf5}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:14px;overflow:hidden;font-size:.92rem}
+th,td{padding:10px 12px;text-align:right;border-bottom:1px solid #eef0f3}
+th:first-child,td:first-child{text-align:left}
+th{font-size:.76rem;color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:0}
+
+/* Ajustes */
+.box{background:var(--card);border-radius:16px;padding:14px 16px;display:grid;gap:12px}
+.fld{display:grid;gap:6px}
+.fld label,.fld span{font-size:.82rem;font-weight:500;color:#3b4250}
+.fld input,.fld select,.fld textarea{border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:1rem;background:#fff;width:100%}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tipo{display:grid;grid-template-columns:1.3fr 1fr .8fr auto;gap:8px;align-items:end;padding-bottom:12px;border-bottom:1px solid #eef0f3}
+.tipo:last-of-type{border:0;padding-bottom:0}
+.tipo .det{grid-column:1 / -1}
+.check{display:flex;gap:10px;align-items:center;font-weight:500}
+.check input{width:22px;height:22px}
+.link{display:flex;gap:8px;align-items:center;background:#eef0fb;border-radius:12px;padding:10px 12px}
+.link code{flex:1;font-size:.86rem;word-break:break-all;color:var(--navy)}
+.hint{color:var(--muted);font-size:.82rem;line-height:1.4;margin:0}
+
+/* Ventanas */
+.modal{position:fixed;inset:0;z-index:20;background:rgba(10,12,20,.55);display:grid;place-items:end center}
+.sheet{background:var(--bg);width:100%;max-width:760px;max-height:92dvh;overflow:auto;border-radius:20px 20px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom,0px) + 18px);display:grid;gap:12px}
+.sheet .sh{display:flex;align-items:center;gap:10px}
+.sheet .sh b{flex:1;font-size:1.1rem}
+.x{border:0;background:#e4e5ea;border-radius:50%;width:34px;height:34px;font-size:1rem}
+.comp img{width:100%;border-radius:12px;background:#fff}
+.comp iframe{width:100%;height:70dvh;border:0;border-radius:12px;background:#fff}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translateX(-50%);background:#16191f;color:#fff;border-radius:12px;padding:11px 16px;z-index:30;font-size:.92rem;max-width:90vw}
+</style>
+</head>
+<body>
+<div id="login" class="login">
+  <img src="logo.png" alt="Escudo SMRHC">
+  <h1>Panel de entradas</h1>
+  <input id="pin" type="password" inputmode="numeric" autocomplete="current-password" placeholder="PIN" aria-label="PIN de admin">
+  <button id="entrar" class="btn">Entrar</button>
+  <div id="login-err"></div>
+</div>
+
+<div id="app" class="app hidden">
+  <div class="top">
+    <div class="hd"><img src="logo.png" alt=""><div class="tt"><b>Entradas</b><small id="ev-name"></small></div>
+      <a class="btn sec sm" href="puerta.html">📷 Puerta</a><button id="salir" class="btn sec sm">Salir</button></div>
+    <div class="tabs" role="tablist">
+      <button role="tab" data-tab="pedidos" aria-selected="true">Pedidos</button>
+      <button role="tab" data-tab="resumen" aria-selected="false">Resumen</button>
+      <button role="tab" data-tab="ajustes" aria-selected="false">Ajustes</button>
+    </div>
+  </div>
+  <main id="view"></main>
+</div>
+<div id="modal" class="modal hidden"><div class="sheet" id="sheet"></div></div>
+<div id="toast" class="toast hidden"></div>
+
+<script src="comun.js"></script>
+<script>
+const ESTADOS = { pendiente: 'Por verificar', pagado: 'Pagado', rechazado: 'Rechazado' };
+const S = { pin: guardado('admin') || '', tab: 'pedidos', filtro: 'pendiente', q: '', d: null, res: null };
+const el = id => document.getElementById(id);
+const view = el('view');
+
+function toast(t) {
+  const x = el('toast'); x.textContent = t; x.classList.remove('hidden');
+  clearTimeout(toast.t); toast.t = setTimeout(() => x.classList.add('hidden'), 2600);
+}
+async function api(fn, args = {}) {
+  try { return await rpc(fn, { p_pin: S.pin, ...args }); }
+  catch (e) {
+    if (e.code === '28000') { salir(); el('login-err').innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+    throw e;
+  }
+}
+
+// ---------- ingreso ----------
+async function entrar() {
+  const pin = el('pin').value.trim();
+  el('login-err').innerHTML = '';
+  try {
+    const r = await rpc('ent_login', { p_pin: pin });
+    if (r.rol !== 'admin') { location.href = 'puerta.html'; return; }
+    S.pin = pin; guardado('admin', pin);
+    el('login').classList.add('hidden'); el('app').classList.remove('hidden');
+    await cargar(); render();
+  } catch (e) { el('login-err').innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+}
+function salir() {
+  S.pin = ''; guardado('admin', null);
+  el('app').classList.add('hidden'); el('login').classList.remove('hidden'); el('pin').value = '';
+}
+el('entrar').onclick = entrar;
+el('pin').onkeydown = e => { if (e.key === 'Enter') entrar(); };
+el('salir').onclick = salir;
+document.querySelectorAll('[data-tab]').forEach(b => b.onclick = async () => {
+  S.tab = b.dataset.tab;
+  document.querySelectorAll('[data-tab]').forEach(x => x.setAttribute('aria-selected', x === b));
+  if (S.tab === 'resumen') S.res = await api('ent_resumen').catch(() => S.res);
+  render(); scrollTo(0, 0);
+});
+
+async function cargar() {
+  S.d = await api('ent_admin_datos');
+  el('ev-name').textContent = S.d.settings.titulo + ' · ' + S.d.settings.fecha;
+}
+
+// ---------- mensaje de WhatsApp con los links ----------
+function mensajeWA(p) {
+  const s = S.d.settings;
+  const ev = `${s.titulo.toUpperCase()} (${s.fecha}, ${s.hora}, ${s.lugar})`;
+  const nombre = p.nombre.split(' ')[0];
+  if (p.entradas.length === 1) {
+    const e = p.entradas[0];
+    return `¡Hola ${nombre}! Esta es tu entrada personal para ${ev} (N° ${e.codigo}): ${linkEntrada(e.token)}\nMostrá el código QR en la entrada. ¡Te esperamos!`;
+  }
+  return `¡Hola ${nombre}! Estas son las entradas para ${ev}. Cada una es personal, con su código QR:\n\n`
+    + p.entradas.map(e => `• ${e.nombre} (${e.codigo}): ${linkEntrada(e.token)}`).join('\n')
+    + `\n\nCada persona muestra su QR en la entrada. ¡Los esperamos!`;
+}
+
+// ---------- vistas ----------
+function render() {
+  if (!S.d) return;
+  if (S.tab === 'pedidos') renderPedidos();
+  else if (S.tab === 'resumen') renderResumen();
+  else renderAjustes();
+}
+
+function renderPedidos() {
+  const ps = S.d.pedidos;
+  const n = e => ps.filter(p => p.estado === e).length;
+  const q = S.q.trim().toLowerCase();
+  const lista = ps.filter(p => (S.filtro === 'todos' || p.estado === S.filtro)
+    && (!q || [p.nombre, p.tel, p.dni, 'n° ' + p.num, ...p.entradas.flatMap(e => [e.nombre, e.codigo, e.dni])].join(' ').toLowerCase().includes(q)));
+  view.innerHTML = `
+    <div class="row"><div class="chips grow">${[['pendiente', `Por verificar (${n('pendiente')})`], ['pagado', `Pagados (${n('pagado')})`], ['rechazado', `Rechazados (${n('rechazado')})`], ['todos', `Todos (${ps.length})`]]
+      .map(([k, t]) => `<button data-f="${k}" aria-pressed="${S.filtro === k}">${t}</button>`).join('')}</div></div>
+    <div class="row"><input id="q" class="search grow" type="search" placeholder="Buscar nombre, teléfono o SMR-…" value="${esc(S.q)}"><button id="nueva" class="btn">+ Cargar</button></div>
+    ${lista.length ? lista.map(pedidoCard).join('') : `<div class="empty">${S.filtro === 'pendiente' && !q ? 'No hay pagos para verificar.' : 'No hay pedidos.'}</div>`}`;
+  view.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { S.filtro = b.dataset.f; renderPedidos(); });
+  const qi = el('q');
+  qi.oninput = () => { S.q = qi.value; const pos = qi.selectionStart; renderPedidos(); const n2 = el('q'); n2.focus(); n2.setSelectionRange(pos, pos); };
+  el('nueva').onclick = cargarVenta;
+  view.querySelectorAll('[data-a]').forEach(b => b.onclick = () => accion(b.dataset.a, b.dataset.id, b));
+}
+
+function pedidoCard(p) {
+  const wa = waNumero(p.tel);
+  const ents = p.entradas.map(e => `<div class="ent"><code>${esc(e.codigo)}</code><span class="n">${esc(e.nombre)} <small>· ${esc(e.tipo)}${e.dni ? ' · ' + esc(e.dni) : ''}</small></span>
+      ${e.ingreso_at ? `<span class="pill in">Ingresó ${hora(e.ingreso_at)}</span>` : ''}
+      ${p.estado === 'pagado' ? `<a class="lnk" href="${esc(linkEntrada(e.token))}" target="_blank" rel="noopener">Ver</a>` : ''}
+      <button class="lnk" data-a="editar" data-id="${e.id}" aria-label="Corregir nombre">✏️</button></div>`).join('');
+  let acc = '';
+  if (p.estado === 'pendiente') {
+    acc = `${p.comprobante ? `<button class="btn sec sm" data-a="comprobante" data-id="${p.id}">🧾 Ver comprobante</button>` : '<span class="hint">Sin comprobante</span>'}
+      <span class="grow"></span><button class="btn bad sm" data-a="rechazar" data-id="${p.id}">Rechazar</button>
+      <button class="btn sm" data-a="pagar" data-id="${p.id}">✓ Pagó</button>`;
+  } else if (p.estado === 'pagado') {
+    acc = `${wa ? `<a class="btn ok sm" data-a="wa" data-id="${p.id}" href="https://wa.me/${wa}?text=${encodeURIComponent(mensajeWA(p))}" target="_blank" rel="noopener">💬 Enviar por WhatsApp</a>` : '<span class="hint">Teléfono inválido: copiá el mensaje</span>'}
+      <button class="btn sec sm" data-a="copiar" data-id="${p.id}">Copiar mensaje</button>
+      ${p.enviado_at ? `<span class="sent">✓ Enviado ${fechaHora(p.enviado_at)}</span>` : ''}
+      <span class="grow"></span>${p.comprobante ? `<button class="lnk" data-a="comprobante" data-id="${p.id}">Comprobante</button>` : ''}
+      <button class="lnk" data-a="pendiente" data-id="${p.id}">Deshacer</button>`;
+  } else {
+    acc = `${p.comprobante ? `<button class="btn sec sm" data-a="comprobante" data-id="${p.id}">🧾 Ver comprobante</button>` : ''}
+      <span class="grow"></span><button class="lnk" data-a="pendiente" data-id="${p.id}">Volver a revisar</button>`;
+  }
+  return `<div class="ped"><div class="h"><div class="nm"><b>N° ${p.num} · ${esc(p.nombre)}</b>
+      <small>${esc(p.tel || 'sin teléfono')}${p.vinculo ? ' · ' + esc(p.vinculo) : ''}${p.origen === 'manual' ? ' · cargado a mano' : ''} · ${fechaHora(p.created_at)}</small></div>
+      <div style="text-align:right"><div class="tot">${money(p.total)}</div><span class="pill ${p.estado}"><i></i>${ESTADOS[p.estado]}</span></div></div>
+    <div class="ents">${ents}</div>
+    ${p.nota ? `<div class="nota">📝 ${esc(p.nota)}</div>` : ''}
+    <div class="row">${acc}<button class="lnk" data-a="nota" data-id="${p.id}">📝</button></div></div>`;
+}
+
+async function accion(a, id, btn) {
+  const p = S.d.pedidos.find(x => x.id === id);
+  try {
+    if (a === 'pagar' || a === 'rechazar' || a === 'pendiente') {
+      if (a === 'rechazar' && !confirm(`¿Rechazar el pedido N° ${p.num} de ${p.nombre}? Sus entradas dejan de valer y se libera el lugar.`)) return;
+      btn.disabled = true;
+      await api('ent_admin_estado', { p_pedido: id, p_estado: a === 'pagar' ? 'pagado' : a === 'rechazar' ? 'rechazado' : 'pendiente' });
+      await cargar();
+      if (a === 'pagar') { toast(`N° ${p.num} pagado. Mandale las entradas por WhatsApp.`); S.filtro = 'pagado'; S.q = String(p.nombre); }
+      renderPedidos();
+    } else if (a === 'wa') {
+      api('ent_admin_enviado', { p_pedido: id }).then(cargar).then(render).catch(() => {}); // el link se abre igual
+    } else if (a === 'copiar') {
+      await navigator.clipboard.writeText(mensajeWA(p));
+      toast('Mensaje copiado. Pegalo en WhatsApp.');
+      await api('ent_admin_enviado', { p_pedido: id }); await cargar(); renderPedidos();
+    } else if (a === 'comprobante') {
+      verComprobante(p);
+    } else if (a === 'nota') {
+      const t = prompt('Nota del pedido (ej. "pagó en efectivo"):', p.nota || '');
+      if (t === null) return;
+      await api('ent_admin_nota', { p_pedido: id, p_nota: t }); await cargar(); renderPedidos();
+    } else if (a === 'editar') {
+      const e = S.d.pedidos.flatMap(x => x.entradas).find(x => x.id === id);
+      const nombre = prompt(`Nombre y apellido (${e.codigo}):`, e.nombre); if (nombre === null) return;
+      const dni = prompt('DNI (opcional):', e.dni || ''); if (dni === null) return;
+      await api('ent_admin_entrada', { p_entrada: id, p_nombre: nombre, p_dni: dni }); await cargar(); renderPedidos();
+      toast('Listo. El link y el QR siguen siendo los mismos.');
+    }
+  } catch (e) { toast(e.message); if (btn) btn.disabled = false; }
+}
+
+// ---------- ventanas ----------
+function abrir(html) { el('sheet').innerHTML = html; el('modal').classList.remove('hidden'); el('sheet').scrollTop = 0; }
+function cerrar() {
+  el('modal').classList.add('hidden'); el('sheet').innerHTML = '';
+  if (cerrar.url) { URL.revokeObjectURL(cerrar.url); cerrar.url = null; }
+}
+el('modal').onclick = e => { if (e.target === el('modal') || e.target.closest('.x')) cerrar(); };
+
+async function verComprobante(p) {
+  abrir(`<div class="sh"><b>Comprobante · N° ${p.num}</b><button class="x" aria-label="Cerrar">✕</button></div><div class="comp">Cargando…</div>`);
+  try {
+    const c = await api('ent_admin_comprobante', { p_pedido: p.id });
+    const bin = atob(c.data); const u8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    const url = cerrar.url = URL.createObjectURL(new Blob([u8], { type: c.mime }));
+    el('sheet').querySelector('.comp').innerHTML = (c.mime === 'application/pdf' ? `<iframe src="${url}" title="Comprobante"></iframe>` : `<img src="${url}" alt="Comprobante">`)
+      + `<p class="hint" style="margin-top:8px">Total a cobrar: <b>${money(p.total)}</b> · ${esc(p.nombre)}. Confirmá que la plata entró en la cuenta antes de marcar "Pagó". <a href="${url}" target="_blank" rel="noopener">Abrir aparte</a></p>`;
+  } catch (e) { el('sheet').querySelector('.comp').innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+}
+
+function cargarVenta() {
+  const tipos = S.d.tipos;
+  if (!tipos.length) { toast('Primero cargá un tipo de entrada en Ajustes.'); return; }
+  const fila = () => `<div class="two fila" style="grid-template-columns:1.5fr 1fr auto"><input placeholder="Nombre y apellido" class="fn" style="border:1px solid var(--line);border-radius:10px;padding:11px 12px">
+    <select class="ft" style="border:1px solid var(--line);border-radius:10px;padding:11px 8px;background:#fff">${tipos.map(t => `<option value="${t.id}">${esc(t.nombre)} · ${money(t.precio)}</option>`).join('')}</select>
+    <button class="x quitar" type="button" aria-label="Quitar">✕</button></div>`;
+  abrir(`<div class="sh"><b>Cargar venta</b><button class="x" aria-label="Cerrar">✕</button></div>
+    <p class="hint">Para entradas que se cobran por fuera (efectivo, cortesías). Quedan pagadas y con su link listo.</p>
+    <div class="box"><div class="fld"><label for="vn">Quién compra</label><input id="vn" placeholder="Nombre y apellido"></div>
+      <div class="fld"><label for="vt">WhatsApp</label><input id="vt" type="tel" inputmode="tel" placeholder="11 5555-5555"></div>
+      <div class="fld"><span>Entradas</span><div id="filas" style="display:grid;gap:8px">${fila()}</div>
+        <button class="lnk" id="mas" type="button" style="justify-self:start">+ Otra entrada</button></div>
+      <div class="fld"><label for="vnota">Nota</label><input id="vnota" placeholder="Ej: pagó en efectivo a Juan"></div>
+      <div id="verr"></div>
+      <button class="btn" id="vok">Guardar</button></div>`);
+  const filas = el('filas');
+  const bind = () => filas.querySelectorAll('.quitar').forEach(b => b.onclick = () => { if (filas.children.length > 1) b.closest('.fila').remove(); });
+  bind();
+  el('vn').oninput = () => { const f = filas.querySelector('.fn'); if (!f.dataset.edit) f.value = el('vn').value; };
+  filas.querySelector('.fn').oninput = e => e.target.dataset.edit = 1;
+  el('mas').onclick = () => { filas.insertAdjacentHTML('beforeend', fila()); bind(); };
+  el('vok').onclick = async () => {
+    const b = el('vok'); b.disabled = true; el('verr').innerHTML = '';
+    try {
+      const r = await api('ent_admin_cargar', { p: {
+        nombre: el('vn').value, tel: el('vt').value, nota: el('vnota').value,
+        entradas: [...filas.querySelectorAll('.fila')].map(f => ({ nombre: f.querySelector('.fn').value, tipo_id: f.querySelector('.ft').value })),
+      } });
+      cerrar(); await cargar(); S.filtro = 'pagado'; S.q = ''; renderPedidos();
+      toast(`Pedido N° ${r.num} cargado. Mandale las entradas por WhatsApp.`);
+    } catch (e) { el('verr').innerHTML = `<div class="err">${esc(e.message)}</div>`; b.disabled = false; }
+  };
+}
+
+function renderResumen() {
+  const r = S.res;
+  if (!r) { view.innerHTML = '<div class="empty">Cargando…</div>'; return; }
+  const ps = S.d.pedidos;
+  const sinEnviar = ps.filter(p => p.estado === 'pagado' && !p.enviado_at).length;
+  view.innerHTML = `<div class="stats">
+      <div class="stat hi"><small>Entradas pagadas</small><b>${r.pagadas}${r.cupo != null ? ` / ${r.cupo}` : ''}</b></div>
+      <div class="stat"><small>Recaudado</small><b>${money(r.recaudado)}</b></div>
+      <div class="stat"><small>Por verificar</small><b>${r.pendientes}</b><small>${money(r.a_verificar)}</small></div>
+      <div class="stat"><small>Ingresaron</small><b>${r.ingresaron}</b><small>de ${r.pagadas}</small></div>
+    </div>
+    ${sinEnviar ? `<div class="err" style="background:var(--warnbg);color:var(--warnfg)">Hay ${sinEnviar} pedido${sinEnviar > 1 ? 's' : ''} pagado${sinEnviar > 1 ? 's' : ''} sin enviar por WhatsApp.</div>` : ''}
+    <h2>Por tipo</h2>
+    <table><thead><tr><th>Tipo</th><th>Pagadas</th><th>Por verificar</th><th>Ingresaron</th></tr></thead>
+      <tbody>${r.por_tipo.map(t => `<tr><td>${esc(t.tipo)}</td><td>${t.pagadas}</td><td>${t.pendientes}</td><td>${t.ingresaron}</td></tr>`).join('') || '<tr><td colspan="4">Todavía no hay ventas.</td></tr>'}</tbody></table>
+    <button id="csv" class="btn sec">⬇️ Bajar lista de asistentes (Excel)</button>
+    <button id="refresh" class="btn sec">↻ Actualizar</button>`;
+  el('csv').onclick = bajarCSV;
+  el('refresh').onclick = async () => { await cargar(); S.res = await api('ent_resumen'); renderResumen(); };
+}
+
+function bajarCSV() {
+  const cel = v => { let s = String(v ?? ''); if (/^[=+\-@]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };
+  const filas = [['Entrada', 'Asistente', 'DNI', 'Tipo', 'Precio', 'Pedido', 'Compró', 'WhatsApp', 'Vínculo', 'Estado', 'Ingresó', 'Link']];
+  S.d.pedidos.slice().reverse().forEach(p => p.entradas.forEach(e => filas.push([e.codigo, e.nombre, e.dni, e.tipo, e.precio, p.num, p.nombre, p.tel, p.vinculo,
+    ESTADOS[p.estado], e.ingreso_at ? fechaHora(e.ingreso_at) : '', p.estado === 'pagado' ? linkEntrada(e.token) : ''])));
+  const csv = '﻿' + filas.map(f => f.map(cel).join(';')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = 'asistentes.csv'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+function renderAjustes() {
+  const s = S.d.settings;
+  const publico = new URL('./', location.href).href;
+  const f = (k, l, extra = '') => `<div class="fld"><label for="s-${k}">${l}</label><input id="s-${k}" value="${esc(s[k] ?? '')}" ${extra}></div>`;
+  view.innerHTML = `
+    <h2>Link para vender</h2>
+    <div class="link"><code>${esc(publico)}</code><button class="btn sm" id="cp-link">Copiar</button></div>
+    <label class="check box"><input type="checkbox" id="s-abiertas" ${s.ventas_abiertas ? 'checked' : ''}> Venta abierta (si la apagás, la página deja de vender)</label>
+    <h2>Entradas y precios</h2>
+    <div class="box" id="tipos">${S.d.tipos.map(t => `<div class="tipo" data-id="${t.id}">
+        <div class="fld"><span>Tipo</span><input class="t-nombre" value="${esc(t.nombre)}"></div>
+        <div class="fld"><span>Precio</span><input class="t-precio" inputmode="numeric" value="${t.precio}"></div>
+        <div class="fld"><span>Cupo</span><input class="t-cupo" inputmode="numeric" placeholder="—" value="${t.cupo ?? ''}"></div>
+        <button class="x t-quitar" aria-label="Quitar ${esc(t.nombre)}">✕</button>
+        <div class="fld det"><span>Aclaración (opcional)</span><input class="t-detalle" placeholder="Ej: hasta 12 años" value="${esc(t.detalle)}"></div></div>`).join('')}
+      <button class="lnk" id="t-nuevo" style="justify-self:start">+ Agregar tipo de entrada</button>
+      ${f('cupo', 'Cupo total del evento (vacío = sin límite)', 'inputmode="numeric" placeholder="Sin límite"')}</div>
+    <h2>Transferencia</h2>
+    <div class="box">${f('alias', 'Alias')}${f('cbu', 'CBU / CVU', 'inputmode="numeric"')}${f('titular', 'Titular')}
+      ${f('whatsapp', 'WhatsApp del organizador (para consultas)', 'type="tel" inputmode="tel" placeholder="5491155555555"')}</div>
+    <h2>Evento</h2>
+    <div class="box">${f('titulo', 'Nombre')}${f('bajada', 'Bajada')}<div class="two">${f('fecha', 'Fecha')}${f('hora', 'Horario')}</div>
+      <div class="two">${f('lugar', 'Lugar')}${f('vestimenta', 'Vestimenta')}</div>${f('club', 'Club')}${f('prefijo', 'Prefijo del número de entrada', 'maxlength="6"')}</div>
+    <h2>PINs</h2>
+    <div class="box"><div class="two">${f('pin_admin', 'Admin (este panel)', 'inputmode="numeric"')}${f('pin_puerta', 'Puerta (solo escanear)', 'inputmode="numeric"')}</div>
+      <p class="hint">Con el PIN de puerta solo se pueden controlar entradas en <b>puerta.html</b>: no ve plata ni datos de los compradores.</p></div>
+    <div id="s-err"></div>
+    <button class="btn" id="s-guardar">Guardar cambios</button>`;
+  el('cp-link').onclick = () => navigator.clipboard.writeText(publico).then(() => toast('Link copiado.'));
+  el('s-abiertas').onchange = async e => {
+    try { await api('ent_admin_guardar', { p: { ventas_abiertas: e.target.checked } }); await cargar(); toast(e.target.checked ? 'Venta abierta.' : 'Venta cerrada.'); }
+    catch (err) { toast(err.message); e.target.checked = !e.target.checked; }
+  };
+  el('t-nuevo').onclick = async () => {
+    try { await api('ent_admin_tipo', { p: { nombre: 'Nuevo tipo', precio: 0 } }); await cargar(); renderAjustes(); } catch (e) { toast(e.message); }
+  };
+  view.querySelectorAll('.t-quitar').forEach(b => b.onclick = async () => {
+    const t = b.closest('.tipo');
+    if (!confirm(`¿Quitar "${t.querySelector('.t-nombre').value}" de la venta? Las entradas ya vendidas siguen valiendo.`)) return;
+    try { await api('ent_admin_tipo', { p: { id: t.dataset.id, activo: false } }); await cargar(); renderAjustes(); } catch (e) { toast(e.message); }
+  });
+  el('s-guardar').onclick = async () => {
+    const b = el('s-guardar'); b.disabled = true; el('s-err').innerHTML = '';
+    const num = v => v.replace(/\D/g, '');
+    try {
+      for (const t of view.querySelectorAll('.tipo')) {
+        await api('ent_admin_tipo', { p: { id: t.dataset.id, nombre: t.querySelector('.t-nombre').value, detalle: t.querySelector('.t-detalle').value,
+          precio: Number(num(t.querySelector('.t-precio').value) || 0), cupo: num(t.querySelector('.t-cupo').value) } });
+      }
+      const p = {};
+      ['titulo', 'bajada', 'fecha', 'hora', 'lugar', 'vestimenta', 'club', 'prefijo', 'alias', 'cbu', 'titular', 'whatsapp', 'pin_admin', 'pin_puerta']
+        .forEach(k => p[k] = el('s-' + k).value.trim());
+      p.cupo = num(el('s-cupo').value);
+      await api('ent_admin_guardar', { p });
+      if (p.pin_admin && p.pin_admin !== S.pin) { S.pin = p.pin_admin; guardado('admin', S.pin); }
+      await cargar(); renderAjustes(); toast('Cambios guardados.');
+    } catch (e) { el('s-err').innerHTML = `<div class="err">${esc(e.message)}</div>`; b.disabled = false; }
+  };
+}
+
+// Se actualiza solo cada 30 s (si no estás escribiendo ni con una ventana abierta).
+setInterval(async () => {
+  if (!S.pin || document.hidden || !el('modal').classList.contains('hidden') || S.tab === 'ajustes') return;
+  if (document.activeElement && document.activeElement.id === 'q') return;
+  try { await cargar(); if (S.tab === 'resumen') S.res = await api('ent_resumen'); render(); } catch (e) { /* reintenta */ }
+}, 30000);
+
+if (S.pin) { el('pin').value = S.pin; entrar(); }
+</script>
+</body>
+</html>
